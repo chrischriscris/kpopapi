@@ -21,3 +21,4 @@
 go.work
 go.work.sum
 modules/scraper/scraper
+modules/scraper/images
