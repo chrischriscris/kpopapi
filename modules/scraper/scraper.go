@@ -6,42 +6,68 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gocolly/colly"
 )
 
 const baseURL = "https://kpopping.com"
+const baseDir = "images"
 
-func main() {
+func extractLabel(text string) string {
+	return strings.Split(text, "\n")[3][3:]
+}
+
+func buildPhotoNameFromURL(url string) string {
+	p := strings.Split(url, "/")
+	n := p[len(p)-1]
+
+	return strings.Split(n, "?")[0]
+}
+
+func getPageLinks() map[string][]string {
 	c := colly.NewCollector()
 
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting: ", r.URL)
+		fmt.Println("Starting scraping: ", r.URL)
 	})
 
-	c.OnError(func(_ *colly.Response, err error) {
-		log.Println("Something went wrong: ", err)
+	// links[label] = [link1, link2, ...]
+	links := make(map[string][]string)
+	c.OnHTML("div.cell", func(e *colly.HTMLElement) {
+		artist := extractLabel(e.DOM.Find("figcaption").First().Text())
+		link := e.ChildAttr("a[aria-label='picture']", "href")
+
+		links[artist] = append(links[artist], link)
 	})
 
-	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Page visited: ", r.Request.URL)
-	})
+	c.Visit(baseURL + "/kpics")
 
-	links := make([]string, 0)
-    first := false
+	return links
+}
 
-	c.OnHTML("a[aria-label='picture']", func(e *colly.HTMLElement) {
-		link := e.Attr("href")
+func downloadImages(links map[string][]string) int {
+	acc := 0
+	for artist, links := range links {
+		acc += downloadArtistImages(artist, links)
+	}
 
-		links = append(links, link)
-        if !first {
-            first = true
-            c.Visit(baseURL + link)
-        }
-	})
+    return acc
+}
+
+func downloadArtistImages(artist string, links []string) int {
+	acc := 0
+	for _, link := range links {
+		acc += downloadImagesFromLink(artist, link)
+	}
+
+	return acc
+}
+
+func downloadImagesFromLink(directory string, link string) int {
+	c := colly.NewCollector()
 
 	photos := make([]string, 0)
-	// Grab all <a> inside <div> with class 'box pics'
 	c.OnHTML("div.justified-gallery a", func(e *colly.HTMLElement) {
 		photo := e.Attr("href")
 
@@ -49,49 +75,38 @@ func main() {
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Links found: ")
-		for _, link := range links {
-			fmt.Println(link)
-		}
-		fmt.Println("\n\n")
+		fmt.Println("Found", len(photos), "photos for", directory)
+		for _, photo := range photos {
+			downloadURL := baseURL + photo
 
-		fmt.Println("Photos found: ")
-		for i, photo := range photos {
-            downloadURL := baseURL + photo
+			resp, err := http.Get(downloadURL)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
 
-            fmt.Println(downloadURL)
+			os.MkdirAll(directory, os.ModePerm)
+			out, err := os.Create(fmt.Sprintf("%s/%s.jpg", directory, buildPhotoNameFromURL(photo)))
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer out.Close()
 
-            // Download photo
-            resp, err := http.Get(downloadURL)
-            if err != nil {
-                log.Fatal(err)
-            }
-
-            defer resp.Body.Close()
-
-            // Create a directory
-            os.MkdirAll("karina", os.ModePerm)
-            // Create the file
-
-            out, err := os.Create(fmt.Sprintf("karina/photo%d.jpg", i))
-            if err != nil {
-                log.Fatal(err)
-            }
-
-            defer out.Close()
-
-            // Write the body to file
-            _, err = io.Copy(out, resp.Body)
-            if err != nil {
-                log.Fatal(err)
-            }
-
-            fmt.Println("Photo downloaded: ", photo)
-
+			_, err = io.Copy(out, resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	})
 
-	c.Visit(baseURL + "/kpics")
+	c.Visit(baseURL + link)
 
-	fmt.Println("Hello, World!")
+	return len(photos)
+}
+
+func main() {
+	links := getPageLinks()
+    total := downloadImages(links)
+
+    fmt.Println("Downloaded", total, "images")
 }
