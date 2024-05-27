@@ -13,7 +13,6 @@ import (
 const baseURL = "https://kpopping.com"
 
 func main() {
-	// Scraping logic here
 	c := colly.NewCollector()
 
 	c.OnRequest(func(r *colly.Request) {
@@ -72,7 +71,6 @@ func main() {
 
             // Create a directory
             os.MkdirAll("karina", os.ModePerm)
-
             // Create the file
 
             out, err := os.Create(fmt.Sprintf("karina/photo%d.jpg", i))
