@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/gocolly/colly"
 )
@@ -54,8 +57,39 @@ func main() {
 		fmt.Println("\n\n")
 
 		fmt.Println("Photos found: ")
-		for _, photo := range photos {
-			fmt.Println(photo)
+		for i, photo := range photos {
+            downloadURL := baseURL + photo
+
+            fmt.Println(downloadURL)
+
+            // Download photo
+            resp, err := http.Get(downloadURL)
+            if err != nil {
+                log.Fatal(err)
+            }
+
+            defer resp.Body.Close()
+
+            // Create a directory
+            os.MkdirAll("karina", os.ModePerm)
+
+            // Create the file
+
+            out, err := os.Create(fmt.Sprintf("karina/photo%d.jpg", i))
+            if err != nil {
+                log.Fatal(err)
+            }
+
+            defer out.Close()
+
+            // Write the body to file
+            _, err = io.Copy(out, resp.Body)
+            if err != nil {
+                log.Fatal(err)
+            }
+
+            fmt.Println("Photo downloaded: ", photo)
+
 		}
 	})
 
