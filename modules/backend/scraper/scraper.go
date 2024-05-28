@@ -87,7 +87,7 @@ func downloadImagesFromLink(directory string, link string) int {
 
             outDir := fmt.Sprintf("%s/%s", baseDir, directory)
 			os.MkdirAll(outDir, os.ModePerm)
-			out, err := os.Create(fmt.Sprintf("%s/%s.jpg", outDir, buildPhotoNameFromURL(photo)))
+			out, err := os.Create(fmt.Sprintf("%s/%s.jpg", directory, buildPhotoNameFromURL(photo)))
 			if err != nil {
 				log.Fatal(err)
 			}
