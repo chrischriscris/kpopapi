@@ -26,7 +26,7 @@ def move_to_folder(file: str, folder: str):
     if not os.path.exists(folder):
         os.mkdir(folder)
 
-    shutil.move(file, folder)
+    shutil.copy(file, folder)
 
 
 def landscape_callback(file: str):
