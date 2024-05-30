@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Idol struct {
     gorm.Model
@@ -13,7 +17,7 @@ type Idol struct {
 type IdolInfo struct {
     gorm.Model
     IdolID uint
-    Birthdate string
-    Height float64
-    Weight float64
+    Birthdate time.Time
+    Height float64 // Centimeters
+    Weight float64 // Kilograms
 }

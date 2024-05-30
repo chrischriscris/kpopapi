@@ -1,11 +1,15 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Group struct {
     gorm.Model
     Name string
-    Company Company
+    CompanyID uint
     Info *GroupInfo
     Type string // Either Boy Group, Girl Group or Co-Ed Group
     Members []*Idol `gorm:"many2many:group_idols;"`
@@ -14,6 +18,6 @@ type Group struct {
 type GroupInfo struct {
     gorm.Model
     GroupID uint
-    DebutDate string
+    DebutDate time.Time
 }
 
