@@ -1,4 +1,4 @@
-module backend
+module github.com/chrischriscris/kpopapi
 
 go 1.22.3
 

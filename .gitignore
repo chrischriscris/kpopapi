@@ -24,3 +24,4 @@ modules/scraper/scraper
 modules/scraper/images
 modules/backend/images
 images
+test.db

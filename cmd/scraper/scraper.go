@@ -52,7 +52,7 @@ func downloadImages(links map[string][]string) int {
 		acc += downloadArtistImages(artist, links)
 	}
 
-    return acc
+	return acc
 }
 
 func downloadArtistImages(artist string, links []string) int {
@@ -85,7 +85,7 @@ func downloadImagesFromLink(directory string, link string) int {
 			}
 			defer resp.Body.Close()
 
-            outDir := fmt.Sprintf("%s/%s", baseDir, directory)
+			outDir := fmt.Sprintf("%s/%s", baseDir, directory)
 			os.MkdirAll(outDir, os.ModePerm)
 			out, err := os.Create(fmt.Sprintf("%s/%s.jpg", outDir, buildPhotoNameFromURL(photo)))
 			if err != nil {
@@ -107,7 +107,7 @@ func downloadImagesFromLink(directory string, link string) int {
 
 func main() {
 	links := getPageLinks()
-    total := downloadImages(links)
+	total := downloadImages(links)
 
-    fmt.Println("Downloaded", total, "images")
+	fmt.Println("Downloaded", total, "images")
 }
