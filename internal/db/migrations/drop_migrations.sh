@@ -4,4 +4,4 @@ set -a
 source .env
 set +a
 
-goose up
+goose down
