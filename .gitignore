@@ -20,8 +20,7 @@
 # Go workspace file
 go.work
 go.work.sum
-modules/scraper/scraper
-modules/scraper/images
-modules/backend/images
+portrait
+landscape
 images
-test.db
+*.db
