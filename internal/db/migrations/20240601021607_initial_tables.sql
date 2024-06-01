@@ -34,7 +34,7 @@ CREATE TABLE idols (
     id SERIAL PRIMARY KEY,
     stage_name VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    gender CHAR NOT NULL,
+    gender CHAR NOT NULL, -- M, F, O (Other), U (Unknown)
     idol_info_id INTEGER REFERENCES idol_info(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -48,6 +48,8 @@ CREATE TABLE idol_info (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE group_members ADD CONSTRAINT unique_group_idol UNIQUE (group_id, idol_id);
 
 -- +goose StatementEnd
 
