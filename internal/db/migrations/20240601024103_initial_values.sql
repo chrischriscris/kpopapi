@@ -25,4 +25,11 @@ INSERT INTO group_members (group_id, idol_id, since_date) VALUES (3, 3, '2016-08
 
 -- +goose Down
 -- +goose StatementBegin
+
+DELETE FROM group_members;
+DELETE FROM idols;
+DELETE FROM idol_info;
+DELETE FROM groups;
+DELETE FROM companies;
+
 -- +goose StatementEnd

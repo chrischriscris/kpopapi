@@ -2,7 +2,10 @@ module github.com/chrischriscris/kpopapi
 
 go 1.22.3
 
-require github.com/gocolly/colly v1.2.0
+require (
+	github.com/gocolly/colly v1.2.0
+	github.com/mattn/go-sqlite3 v1.14.22
+)
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2 // indirect
