@@ -1,10 +1,10 @@
--- name: GetIdol :one
+-- name: GetIdolByName :one
 SELECT * FROM idols
-WHERE id = ? LIMIT 1;
+WHERE name = $1 or stage_name = $1
+LIMIT 1;
 
 -- name: ListIdols :many
-SELECT * FROM idols
-ORDER BY name;
+SELECT * FROM idols;
 
 -- name: CreateIdol :one
 INSERT INTO idols (
@@ -16,12 +16,3 @@ INSERT INTO idols (
   ?, ?, ?, ?
 )
 RETURNING *;
-
--- name: UpdateIdol :exec
-UPDATE idols
-set name = ?
-WHERE id = ?;
-
--- name: DeleteAuthor :exec
-DELETE FROM idols
-WHERE id = ?;

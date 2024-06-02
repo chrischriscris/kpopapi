@@ -4,13 +4,13 @@
 CREATE TABLE images (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
-    metadata_id INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE image_metadata (
     id SERIAL PRIMARY KEY,
+    image_id INTEGER NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
     landscape BOOLEAN NOT NULL, -- True if width >= height
@@ -35,7 +35,7 @@ CREATE TABLE group_images (
 );
 
 -- Foreign key constraints
-ALTER TABLE images ADD CONSTRAINT fk_metadata_id FOREIGN KEY (metadata_id) REFERENCES image_metadata(id);
+ALTER TABLE image_metadata ADD CONSTRAINT fk_image_id FOREIGN KEY (image_id) REFERENCES images(id);
 ALTER TABLE idol_images ADD CONSTRAINT fk_idol_id FOREIGN KEY (idol_id) REFERENCES idols(id);
 ALTER TABLE idol_images ADD CONSTRAINT fk_image_id FOREIGN KEY (image_id) REFERENCES images(id);
 ALTER TABLE group_images ADD CONSTRAINT fk_group_id FOREIGN KEY (group_id) REFERENCES groups(id);
@@ -44,14 +44,16 @@ ALTER TABLE group_images ADD CONSTRAINT fk_image_id FOREIGN KEY (image_id) REFER
 -- Unique constraints
 ALTER TABLE idol_images ADD CONSTRAINT unique_idol_image UNIQUE (idol_id, image_id);
 ALTER TABLE group_images ADD CONSTRAINT unique_group_image UNIQUE (group_id, image_id);
+ALTER TABLE images ADD CONSTRAINT unique_image_url UNIQUE (url);
+ALTER TABLE image_metadata ADD CONSTRAINT unique_image_metadata UNIQUE (image_id);
 
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TABLE images;
-DROP TABLE image_metadata;
+DROP TABLE images CASCADE;
+DROP TABLE image_metadata CASCADE;
 
 DROP TABLE idol_images;
 DROP TABLE group_images;
