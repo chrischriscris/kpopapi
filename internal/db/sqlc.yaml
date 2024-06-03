@@ -6,3 +6,4 @@ sql:
     gen:
       go:
         out: "repository"
+        sql_package: "pgx_v5"
