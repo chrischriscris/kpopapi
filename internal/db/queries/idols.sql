@@ -10,9 +10,8 @@ SELECT * FROM idols;
 INSERT INTO idols (
     stage_name,
     name,
-    gender,
-    idol_info_id
+    gender
 ) VALUES (
-  ?, ?, ?, ?
+  $1, $2, $3
 )
 RETURNING *;

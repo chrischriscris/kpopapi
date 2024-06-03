@@ -3,28 +3,26 @@ package main
 import (
 	"context"
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"log"
 	"reflect"
 
-	"github.com/chrischriscris/kpopapi/internal/db/tutorial"
+	"github.com/chrischriscris/kpopapi/internal/db/repository"
 )
 
 func main() {
 	ctx := context.Background()
 
-	db, err := sql.Open("sqlite3", "./db.sqlite3")
-	if err != nil {
-		log.Fatal(err)
-	}
+	conn, err := pgx.Connect(ctx, "postgresql://postgres:password@localhost:5432/kpop")
 
-	queries := tutorial.New(db)
+	queries := repository.New(db)
 
 	idols, _ := queries.ListIdols(ctx)
 	log.Println("List of idols")
 	log.Println(idols)
 
-	insertedIdol, err := queries.CreateIdol(ctx, tutorial.CreateIdolParams{
+	insertedIdol, err := queries.CreateIdol(ctx, repository.CreateIdolParams{
 		StageName:  "Chaeyoung",
 		Name:       "Son Chae-young",
 		Gender:     "F",
