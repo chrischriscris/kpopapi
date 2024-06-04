@@ -5,3 +5,8 @@ LIMIT 1;
 
 -- name: ListGroups :many
 SELECT * FROM groups;
+
+-- name: CreateGroupMinimal :one
+INSERT INTO groups (name, type)
+VALUES ($1, $2)
+RETURNING *;

@@ -28,3 +28,4 @@ images
 *.db
 *.sqlite3
 internal/db/migrations/.env
+.env

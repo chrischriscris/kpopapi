@@ -5,79 +5,78 @@
 package repository
 
 import (
-	"database/sql"
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Company struct {
 	ID           int32
 	Name         string
 	Country      string
-	CreationDate sql.NullTime
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	CreationDate pgtype.Date
+	CreatedAt    pgtype.Timestamp
+	UpdatedAt    pgtype.Timestamp
 }
 
 type Group struct {
 	ID        int32
 	Name      string
 	Type      string
-	DebutDate sql.NullTime
-	CompanyID sql.NullInt32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	DebutDate pgtype.Date
+	CompanyID pgtype.Int4
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type GroupImage struct {
 	ID        int32
 	GroupID   int32
 	ImageID   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type GroupMember struct {
 	ID        int32
 	GroupID   int32
 	IdolID    int32
-	SinceDate sql.NullTime
-	UntilDate sql.NullTime
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	SinceDate pgtype.Date
+	UntilDate pgtype.Date
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type Idol struct {
 	ID        int32
 	StageName string
-	Name      sql.NullString
+	Name      pgtype.Text
 	Gender    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type IdolImage struct {
 	ID        int32
 	IdolID    int32
 	ImageID   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type IdolInfo struct {
 	ID        int32
 	IdolID    int32
-	Birthdate sql.NullTime
-	HeightCm  sql.NullFloat64
-	WeightKg  sql.NullFloat64
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Birthdate pgtype.Date
+	HeightCm  pgtype.Float8
+	WeightKg  pgtype.Float8
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type Image struct {
 	ID        int32
 	Url       string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type ImageMetadatum struct {
@@ -86,6 +85,6 @@ type ImageMetadatum struct {
 	Width     int32
 	Height    int32
 	Landscape bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }

@@ -9,6 +9,32 @@ import (
 	"context"
 )
 
+const createGroupMinimal = `-- name: CreateGroupMinimal :one
+INSERT INTO groups (name, type)
+VALUES ($1, $2)
+RETURNING id, name, type, debut_date, company_id, created_at, updated_at
+`
+
+type CreateGroupMinimalParams struct {
+	Name string
+	Type string
+}
+
+func (q *Queries) CreateGroupMinimal(ctx context.Context, arg CreateGroupMinimalParams) (Group, error) {
+	row := q.db.QueryRow(ctx, createGroupMinimal, arg.Name, arg.Type)
+	var i Group
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.DebutDate,
+		&i.CompanyID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getGroupByName = `-- name: GetGroupByName :one
 SELECT id, name, type, debut_date, company_id, created_at, updated_at FROM groups
 WHERE name = $1
@@ -16,7 +42,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetGroupByName(ctx context.Context, name string) (Group, error) {
-	row := q.db.QueryRowContext(ctx, getGroupByName, name)
+	row := q.db.QueryRow(ctx, getGroupByName, name)
 	var i Group
 	err := row.Scan(
 		&i.ID,
@@ -35,7 +61,7 @@ SELECT id, name, type, debut_date, company_id, created_at, updated_at FROM group
 `
 
 func (q *Queries) ListGroups(ctx context.Context) ([]Group, error) {
-	rows, err := q.db.QueryContext(ctx, listGroups)
+	rows, err := q.db.Query(ctx, listGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +81,6 @@ func (q *Queries) ListGroups(ctx context.Context) ([]Group, error) {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
