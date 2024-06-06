@@ -56,7 +56,6 @@ ALTER TABLE group_members ADD CONSTRAINT fk_idol_id FOREIGN KEY (idol_id) REFERE
 ALTER TABLE idol_info ADD CONSTRAINT fk_idol_id FOREIGN KEY (idol_id) REFERENCES idols(id);
 
 -- Unique constraints
-ALTER TABLE groups ADD CONSTRAINT unique_group_name UNIQUE (name);
 ALTER TABLE group_members ADD CONSTRAINT unique_group_idol UNIQUE (group_id, idol_id);
 ALTER TABLE idol_info ADD CONSTRAINT unique_idol_info UNIQUE (idol_id);
 ALTER TABLE companies ADD CONSTRAINT unique_company_name UNIQUE (name, country);
