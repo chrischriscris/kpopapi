@@ -13,7 +13,7 @@ CREATE TABLE companies (
 CREATE TABLE groups (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    type CHAR(2) NOT NULL, -- GG, BG, CE (Co-ed)
+    type CHAR(2) NOT NULL, -- GG, BG, CE (Co-ed), UN (Unknown)
     debut_date DATE,
     company_id INTEGER,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

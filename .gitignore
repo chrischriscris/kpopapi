@@ -29,3 +29,4 @@ images
 *.sqlite3
 internal/db/migrations/.env
 .env
+scrape_images

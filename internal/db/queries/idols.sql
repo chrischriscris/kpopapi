@@ -8,10 +8,28 @@ SELECT * FROM idols;
 
 -- name: CreateIdol :one
 INSERT INTO idols (
-    stage_name,
-    name,
-    gender
+  stage_name,
+  name,
+  gender
 ) VALUES (
   $1, $2, $3
+)
+RETURNING *;
+
+-- name: CreateIdolWithGroupMinimal :one
+INSERT INTO idols (
+  stage_name,
+  gender
+) VALUES (
+  $1, $2
+)
+RETURNING *;
+
+-- name: AddMemberToGroup :one
+INSERT INTO group_members (
+  group_id,
+  idol_id
+) VALUES (
+  $1, $2
 )
 RETURNING *;

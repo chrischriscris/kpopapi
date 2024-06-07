@@ -11,11 +11,41 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addMemberToGroup = `-- name: AddMemberToGroup :one
+INSERT INTO group_members (
+  group_id,
+  idol_id
+) VALUES (
+  $1, $2
+)
+RETURNING id, group_id, idol_id, since_date, until_date, created_at, updated_at
+`
+
+type AddMemberToGroupParams struct {
+	GroupID int32
+	IdolID  int32
+}
+
+func (q *Queries) AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) (GroupMember, error) {
+	row := q.db.QueryRow(ctx, addMemberToGroup, arg.GroupID, arg.IdolID)
+	var i GroupMember
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.IdolID,
+		&i.SinceDate,
+		&i.UntilDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createIdol = `-- name: CreateIdol :one
 INSERT INTO idols (
-    stage_name,
-    name,
-    gender
+  stage_name,
+  name,
+  gender
 ) VALUES (
   $1, $2, $3
 )
@@ -30,6 +60,35 @@ type CreateIdolParams struct {
 
 func (q *Queries) CreateIdol(ctx context.Context, arg CreateIdolParams) (Idol, error) {
 	row := q.db.QueryRow(ctx, createIdol, arg.StageName, arg.Name, arg.Gender)
+	var i Idol
+	err := row.Scan(
+		&i.ID,
+		&i.StageName,
+		&i.Name,
+		&i.Gender,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createIdolWithGroupMinimal = `-- name: CreateIdolWithGroupMinimal :one
+INSERT INTO idols (
+  stage_name,
+  gender
+) VALUES (
+  $1, $2
+)
+RETURNING id, stage_name, name, gender, created_at, updated_at
+`
+
+type CreateIdolWithGroupMinimalParams struct {
+	StageName string
+	Gender    string
+}
+
+func (q *Queries) CreateIdolWithGroupMinimal(ctx context.Context, arg CreateIdolWithGroupMinimalParams) (Idol, error) {
+	row := q.db.QueryRow(ctx, createIdolWithGroupMinimal, arg.StageName, arg.Gender)
 	var i Idol
 	err := row.Scan(
 		&i.ID,
