@@ -16,20 +16,29 @@ import (
 
 const baseURL = "https://kpopping.com"
 
-func getGroupsFromString(groups string) []string {
-	groups = groups[2 : len(groups)-2]
-	return strings.Split(groups, ", ")
+type IdolWithGroups struct {
+    IdolName string
+    Groups []string
 }
 
-func scrapeIdols(url string) map[string][]string {
+func getGroupsFromString(groups string) []string {
+	groups = groups[2 : len(groups)-2]
+    groupList := strings.Split(groups, ", ")
+    for i, group := range groupList {
+        groupList[i] = strings.TrimSpace(group)
+    }
+
+    return groupList
+}
+
+func scrapeIdols(url string) []IdolWithGroups {
 	c := colly.NewCollector()
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Starting scraping: ", r.URL)
 	})
 
-	// idols[idol_name] = [group1, group2, ...]
-	idols := make(map[string][]string)
+	idols := make([]IdolWithGroups, 0)
 	c.OnHTML("div.item", func(e *colly.HTMLElement) {
 		idol := e.ChildText("a")
 
@@ -41,7 +50,10 @@ func scrapeIdols(url string) map[string][]string {
 			groupsArr = getGroupsFromString(groups)
 		}
 
-		idols[idol] = groupsArr
+        idols = append(idols, IdolWithGroups{
+            IdolName: idol,
+            Groups: groupsArr,
+        })
 	})
 
 	c.OnScraped(func(r *colly.Response) {
@@ -93,7 +105,6 @@ func addIdolToGroup(
 	groupName string,
 	idolID int32,
 ) error {
-    groupName = strings.TrimSpace(groupName)
     groupID := int32(0)
 	group, err := qtx.GetGroupByName(ctx, groupName)
 	if err != nil {
@@ -113,7 +124,7 @@ func addIdolToGroup(
 	return err
 }
 
-func loadToDB(groups map[string]map[string][]string) {
+func loadToDB(groups map[string][]IdolWithGroups) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -136,16 +147,16 @@ func loadToDB(groups map[string]map[string][]string) {
 
 	qtx := instance.WithTx(tx)
 	for gender, idols := range groups {
-		for idolName, idolGroups := range idols {
-			idolID, err := createIdolHelper(qtx, ctx, idolName, gender)
+		for _, el := range idols {
+			idolID, err := createIdolHelper(qtx, ctx, el.IdolName, gender)
 			if err != nil {
 				log.Fatalf("Unable to create idol: %v\n", err)
 			}
 
-			for _, group := range idolGroups {
+			for _, group := range el.Groups {
 				err := addIdolToGroup(qtx, ctx, group, idolID)
 				if err != nil {
-					log.Fatalf("Unable to add idol %s to group %s: %v\n", idolName, group, err)
+					log.Fatalf("Unable to add idol %s to group %s: %v\n", el.IdolName, group, err)
 				}
 			}
 		}
@@ -160,7 +171,7 @@ func loadToDB(groups map[string]map[string][]string) {
 func main() {
 	baseIdolsURL := baseURL + "/profiles/the-idols"
 
-	idols := make(map[string]map[string][]string)
+	idols := make(map[string][]IdolWithGroups)
 	idols["F"] = scrapeIdols(baseIdolsURL + "/women")
 	idols["M"] = scrapeIdols(baseIdolsURL + "/men")
 
