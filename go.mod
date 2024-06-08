@@ -5,6 +5,7 @@ go 1.22.3
 require (
 	github.com/gocolly/colly v1.2.0
 	github.com/jackc/pgx/v5 v5.6.0
+	github.com/joho/godotenv v1.5.1
 )
 
 require (
@@ -18,7 +19,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect

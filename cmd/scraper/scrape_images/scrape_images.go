@@ -4,76 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
-	"io"
-
 	"log"
-	"net/http"
-	"os"
-	"strings"
 
+	"github.com/chrischriscris/kpopapi/internal/db/helpers"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/chrischriscris/kpopapi/internal/db/utils"
+	"github.com/chrischriscris/kpopapi/internal/scraper/utils"
 	"github.com/gocolly/colly"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const BASE_URL = "https://kpopping.com"
 const BASE_DIR = "images"
-
-// ===========  Utils ===========
-
-func getImageDimensions(imagePath string) (int, int, error) {
-	file, err := os.Open(imagePath)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer file.Close()
-
-	img, _, err := image.DecodeConfig(file)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return img.Width, img.Height, nil
-}
-
-func extractLabel(text string) string {
-	return strings.Split(text, "\n")[3][3:]
-}
-
-func getFilenameFromURLResponse(resp *http.Response) string {
-	urlParts := strings.Split(resp.Request.URL.Path, "/")
-	return urlParts[len(urlParts)-1]
-}
-
-func downloadImage(url string, directory string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-    filename := getFilenameFromURLResponse(resp)
-	fullPath := fmt.Sprintf("%s/%s.jpg", directory, filename)
-
-	os.MkdirAll(directory, os.ModePerm)
-	out, err := os.Create(fullPath)
-	if err != nil {
-		return "", err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return fullPath, nil
-}
 
 // =========== Database logic ===========
 
@@ -128,12 +69,12 @@ func getGroupOrIdolIDFromDB(
 		return group.ID, true, nil
 	}
 
-	idol, err := qtx.GetIdolByName(ctx, pgtype.Text{String: name})
+    idol, err := qtx.GetIdolByName(ctx,pgtype.Text{String: name, Valid: true})
 	if err == nil {
 		return idol.ID, false, nil
 	}
 
-	return 0, false, fmt.Errorf("Unable to find group or idol with name %s", name)
+	return 0, false, fmt.Errorf("Unable to find group or idol with name '%s'", name)
 }
 
 // Downloads an image from a URL and saves it to the database
@@ -144,12 +85,12 @@ func downloadImageAndSaveToDB(
 	url string,
 	outDir string,
 ) (int32, error) {
-	imgPath, err := downloadImage(url, outDir)
+	imgPath, err := utils.DownloadImage(url, outDir)
 	if err != nil {
 		return 0, fmt.Errorf("Unable to download image: %v\n", err)
 	}
 
-	width, height, err := getImageDimensions(imgPath)
+	width, height, err := utils.GetImageDimensions(imgPath)
 	if err != nil {
 		return 0, fmt.Errorf("Unable to get image dimensions: %v\n", err)
 	}
@@ -180,7 +121,7 @@ func getPageLinks() map[string][]string {
 	// links[label] = [link1, link2, ...]
 	links := make(map[string][]string)
 	c.OnHTML("div.cell", func(e *colly.HTMLElement) {
-		artist := extractLabel(e.DOM.Find("figcaption").First().Text())
+		artist := utils.ExtractLabel(e.DOM.Find("figcaption").First().Text())
 		link := e.ChildAttr("a[aria-label='picture']", "href")
 
 		links[artist] = append(links[artist], link)
@@ -222,13 +163,13 @@ func downloadImagesFromLink(artist string, link string) int {
 
 	c.OnScraped(func(r *colly.Response) {
 		fmt.Println("Found", len(photoURLs), "photos for", artist)
-		ctx, conn, err := utils.ConnectDB()
+		ctx, conn, err := helpers.ConnectDB()
 		if err != nil {
 			log.Fatalf("Unable to connect to database: %v\n", err)
 		}
 		defer conn.Close(context.Background())
 
-		tx, qtx, err := utils.BeginTransaction(ctx, conn)
+		tx, qtx, err := helpers.BeginTransaction(ctx, conn)
 		if err != nil {
 			log.Fatalf("Unable to start transaction: %v\n", err)
 		}

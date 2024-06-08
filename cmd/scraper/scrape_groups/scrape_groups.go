@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/chrischriscris/kpopapi/internal/db/utils"
+	"github.com/chrischriscris/kpopapi/internal/db/helpers"
 
 	"github.com/gocolly/colly"
 )
@@ -36,13 +36,13 @@ func scrapeGroups(url string) []string {
 }
 
 func loadToDB(groups map[string][]string) {
-	ctx, conn, err := utils.ConnectDB()
+	ctx, conn, err := helpers.ConnectDB()
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer conn.Close(context.Background())
 
-	tx, qtx, err := utils.BeginTransaction(ctx, conn)
+	tx, qtx, err := helpers.BeginTransaction(ctx, conn)
 	if err != nil {
 		log.Fatalf("Unable to start transaction: %v\n", err)
 	}
