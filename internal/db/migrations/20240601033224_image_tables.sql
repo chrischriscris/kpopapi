@@ -13,7 +13,7 @@ CREATE TABLE image_metadata (
     image_id INTEGER NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
-    landscape BOOLEAN NOT NULL, -- True if width >= height
+    landscape BOOLEAN NOT NULL GENERATED ALWAYS AS (width >= height) STORED,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
+	"github.com/chrischriscris/kpopapi/internal/db/utils"
 
 	"github.com/gocolly/colly"
 )
@@ -17,18 +15,18 @@ import (
 const baseURL = "https://kpopping.com"
 
 type IdolWithGroups struct {
-    IdolName string
-    Groups []string
+	IdolName string
+	Groups   []string
 }
 
 func getGroupsFromString(groups string) []string {
 	groups = groups[2 : len(groups)-2]
-    groupList := strings.Split(groups, ", ")
-    for i, group := range groupList {
-        groupList[i] = strings.TrimSpace(group)
-    }
+	groupList := strings.Split(groups, ", ")
+	for i, group := range groupList {
+		groupList[i] = strings.TrimSpace(group)
+	}
 
-    return groupList
+	return groupList
 }
 
 func scrapeIdols(url string) []IdolWithGroups {
@@ -50,10 +48,10 @@ func scrapeIdols(url string) []IdolWithGroups {
 			groupsArr = getGroupsFromString(groups)
 		}
 
-        idols = append(idols, IdolWithGroups{
-            IdolName: idol,
-            Groups: groupsArr,
-        })
+		idols = append(idols, IdolWithGroups{
+			IdolName: idol,
+			Groups:   groupsArr,
+		})
 	})
 
 	c.OnScraped(func(r *colly.Response) {
@@ -92,9 +90,9 @@ func createGroupHelper(
 		Name: groupName,
 		Type: groupType,
 	})
-    if err != nil {
-        return 0, err
-    }
+	if err != nil {
+		return 0, err
+	}
 
 	return group.ID, err
 }
@@ -105,16 +103,16 @@ func addIdolToGroup(
 	groupName string,
 	idolID int32,
 ) error {
-    groupID := int32(0)
+	groupID := int32(0)
 	group, err := qtx.GetGroupByName(ctx, groupName)
 	if err != nil {
-        groupID, err = createGroupHelper(qtx, ctx, groupName, "UN")
-        if err != nil {
-            return err
-        }
+		groupID, err = createGroupHelper(qtx, ctx, groupName, "UN")
+		if err != nil {
+			return err
+		}
 	} else {
-        groupID = group.ID
-    }
+		groupID = group.ID
+	}
 
 	_, err = qtx.AddMemberToGroup(ctx, repository.AddMemberToGroupParams{
 		GroupID: groupID,
@@ -125,27 +123,18 @@ func addIdolToGroup(
 }
 
 func loadToDB(groups map[string][]IdolWithGroups) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	ctx := context.Background()
-
-	conn, err := pgx.Connect(ctx, os.Getenv("DB_CONN_STRING"))
+	ctx, conn, err := utils.ConnectDB()
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	defer conn.Close(ctx)
+	defer conn.Close(context.Background())
 
-	instance := repository.New(conn)
-	tx, err := conn.Begin(ctx)
+	tx, qtx, err := utils.BeginTransaction(ctx, conn)
 	if err != nil {
 		log.Fatalf("Unable to start transaction: %v\n", err)
 	}
 	defer tx.Rollback(ctx)
 
-	qtx := instance.WithTx(tx)
 	for gender, idols := range groups {
 		for _, el := range idols {
 			idolID, err := createIdolHelper(qtx, ctx, el.IdolName, gender)

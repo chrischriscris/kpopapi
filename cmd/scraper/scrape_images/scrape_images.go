@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"image"
@@ -14,11 +15,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chrischriscris/kpopapi/internal/db/repository"
+	"github.com/chrischriscris/kpopapi/internal/db/utils"
 	"github.com/gocolly/colly"
 )
 
 const baseURL = "https://kpopping.com"
 const baseDir = "images"
+
+// ===========  Utils ===========
 
 func getImageDimensions(imagePath string) (int, int, error) {
 	file, err := os.Open(imagePath)
@@ -68,6 +73,34 @@ func downloadImage(url string, directory string, photo string) (string, error) {
 
 	return imgFullPath, nil
 }
+
+// =========== Database logic ===========
+
+func saveImageToDB() {
+	ctx, conn, err := utils.ConnectDB()
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+
+	tx, qtx, err := utils.BeginTransaction(ctx, conn)
+	if err != nil {
+		log.Fatalf("Unable to start transaction: %v\n", err)
+	}
+	defer tx.Rollback(ctx)
+
+    _, err := qtx.AddImage(ctx, "https://kpopping.com/kpics/2021/12/20211207-0001-0001.jpg")
+    if err != nil {
+        log.Fatalf("Unable to add image: %v\n", err)
+    }
+
+    // imageMetadata, err := qtx.AddImageMetadata(ctx, repository.AddImageMetadataParams{
+    //     ImageID: image.ID,
+    //     Width:
+    //
+}
+
+// =========== Scraping logic ===========
 
 func getPageLinks() map[string][]string {
 	c := colly.NewCollector()

@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
+	"github.com/chrischriscris/kpopapi/internal/db/utils"
 
 	"github.com/gocolly/colly"
 )
@@ -38,27 +36,18 @@ func scrapeGroups(url string) []string {
 }
 
 func loadToDB(groups map[string][]string) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	ctx := context.Background()
-
-	conn, err := pgx.Connect(ctx, os.Getenv("DB_CONN_STRING"))
+	ctx, conn, err := utils.ConnectDB()
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	defer conn.Close(ctx)
+	defer conn.Close(context.Background())
 
-	instance := repository.New(conn)
-	tx, err := conn.Begin(ctx)
+	tx, qtx, err := utils.BeginTransaction(ctx, conn)
 	if err != nil {
 		log.Fatalf("Unable to start transaction: %v\n", err)
 	}
 	defer tx.Rollback(ctx)
 
-	qtx := instance.WithTx(tx)
 	for groupType, groupNames := range groups {
 		for _, groupName := range groupNames {
 			_, err := qtx.CreateGroupMinimal(ctx, repository.CreateGroupMinimalParams{
@@ -66,7 +55,7 @@ func loadToDB(groups map[string][]string) {
 				Type: groupType,
 			})
 			if err != nil {
-                fmt.Println("Unable to insert group: ", err)
+				fmt.Println("Unable to insert group: ", err)
 			}
 		}
 	}
@@ -85,5 +74,5 @@ func main() {
 	groups["BG"] = scrapeGroups(baseGroupsURL + "/men")
 	groups["CE"] = scrapeGroups(baseGroupsURL + "/coed")
 
-    loadToDB(groups)
+	loadToDB(groups)
 }
