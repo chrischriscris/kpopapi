@@ -2,7 +2,13 @@ package main
 
 import (
 	"fmt"
+
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
+
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +20,21 @@ import (
 const baseURL = "https://kpopping.com"
 const baseDir = "images"
 
+func getImageDimensions(imagePath string) (int, int, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer file.Close()
+
+	img, _, err := image.DecodeConfig(file)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return img.Width, img.Height, nil
+}
+
 func extractLabel(text string) string {
 	return strings.Split(text, "\n")[3][3:]
 }
@@ -23,6 +44,29 @@ func buildPhotoNameFromURL(url string) string {
 	n := p[len(p)-1]
 
 	return strings.Split(n, "?")[0]
+}
+
+func downloadImage(url string, directory string, photo string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	imgFullPath := fmt.Sprintf("%s/%s.jpg", directory, buildPhotoNameFromURL(photo))
+	os.MkdirAll(directory, os.ModePerm)
+	out, err := os.Create(imgFullPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return imgFullPath, nil
 }
 
 func getPageLinks() map[string][]string {
@@ -79,24 +123,18 @@ func downloadImagesFromLink(directory string, link string) int {
 		for _, photo := range photos {
 			downloadURL := baseURL + photo
 
-			resp, err := http.Get(downloadURL)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer resp.Body.Close()
-
 			outDir := fmt.Sprintf("%s/%s", baseDir, directory)
-			os.MkdirAll(outDir, os.ModePerm)
-			out, err := os.Create(fmt.Sprintf("%s/%s.jpg", outDir, buildPhotoNameFromURL(photo)))
+			imgPath, err := downloadImage(downloadURL, outDir, photo)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer out.Close()
 
-			_, err = io.Copy(out, resp.Body)
+			width, height, err := getImageDimensions(imgPath)
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			fmt.Println("Downloaded", imgPath, "with dimensions", width, "x", height)
 		}
 	})
 
