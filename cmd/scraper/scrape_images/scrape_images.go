@@ -21,8 +21,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const baseURL = "https://kpopping.com"
-const baseDir = "images"
+const BASE_URL = "https://kpopping.com"
+const BASE_DIR = "images"
 
 // ===========  Utils ===========
 
@@ -45,34 +45,34 @@ func extractLabel(text string) string {
 	return strings.Split(text, "\n")[3][3:]
 }
 
-func buildPhotoNameFromURL(url string) string {
-	p := strings.Split(url, "/")
-	n := p[len(p)-1]
-
-	return strings.Split(n, "?")[0]
+func getFilenameFromURLResponse(resp *http.Response) string {
+	urlParts := strings.Split(resp.Request.URL.Path, "/")
+	return urlParts[len(urlParts)-1]
 }
 
-func downloadImage(url string, directory string, photo string) (string, error) {
+func downloadImage(url string, directory string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	imgFullPath := fmt.Sprintf("%s/%s.jpg", directory, buildPhotoNameFromURL(photo))
+    filename := getFilenameFromURLResponse(resp)
+	fullPath := fmt.Sprintf("%s/%s.jpg", directory, filename)
+
 	os.MkdirAll(directory, os.ModePerm)
-	out, err := os.Create(imgFullPath)
+	out, err := os.Create(fullPath)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return imgFullPath, nil
+	return fullPath, nil
 }
 
 // =========== Database logic ===========
@@ -80,9 +80,8 @@ func downloadImage(url string, directory string, photo string) (string, error) {
 func registerAndSaveImage(
 	ctx context.Context,
 	qtx *repository.Queries,
+	artist string,
 	url string,
-    directory string,
-	photo string,
 ) error {
 
 	// Early return if the image already exists in the database
@@ -91,15 +90,15 @@ func registerAndSaveImage(
 		return nil
 	}
 
-	entityID, isGroup, err := getGroupOrIdolIDFromDB(ctx, *qtx, directory)
+	entityID, isGroup, err := getGroupOrIdolIDFromDB(ctx, *qtx, artist)
 	if err != nil {
 		return err
 	}
 
-	outDir := fmt.Sprintf("%s/%s", baseDir, directory)
-	imageID, err := downloadImageAndSaveToDB(ctx, *qtx, url, outDir, photo)
+	outDir := fmt.Sprintf("%s/%s", BASE_DIR, artist)
+	imageID, err := downloadImageAndSaveToDB(ctx, *qtx, url, outDir)
 	if err != nil {
-        return err
+		return err
 	}
 
 	if isGroup {
@@ -144,9 +143,8 @@ func downloadImageAndSaveToDB(
 	qtx repository.Queries,
 	url string,
 	outDir string,
-	photo string,
 ) (int32, error) {
-	imgPath, err := downloadImage(url, outDir, photo)
+	imgPath, err := downloadImage(url, outDir)
 	if err != nil {
 		return 0, fmt.Errorf("Unable to download image: %v\n", err)
 	}
@@ -188,7 +186,7 @@ func getPageLinks() map[string][]string {
 		links[artist] = append(links[artist], link)
 	})
 
-	c.Visit(baseURL + "/kpics")
+	c.Visit(BASE_URL + "/kpics")
 
 	return links
 }
@@ -211,18 +209,19 @@ func downloadArtistImages(artist string, links []string) int {
 	return acc
 }
 
-func downloadImagesFromLink(directory string, link string) int {
+func downloadImagesFromLink(artist string, link string) int {
 	c := colly.NewCollector()
 
-	photos := make([]string, 0)
+	photoURLs := make([]string, 0)
 	c.OnHTML("div.justified-gallery a", func(e *colly.HTMLElement) {
-		photo := e.Attr("href")
+		photoPath := e.Attr("href")
+		photoURL := BASE_URL + photoPath
 
-		photos = append(photos, photo)
+		photoURLs = append(photoURLs, photoURL)
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Found", len(photos), "photos for", directory)
+		fmt.Println("Found", len(photoURLs), "photos for", artist)
 		ctx, conn, err := utils.ConnectDB()
 		if err != nil {
 			log.Fatalf("Unable to connect to database: %v\n", err)
@@ -235,10 +234,8 @@ func downloadImagesFromLink(directory string, link string) int {
 		}
 		defer tx.Rollback(ctx)
 
-		for _, photo := range photos {
-			downloadURL := baseURL + photo
-
-            err := registerAndSaveImage(ctx, qtx, downloadURL, directory, photo)
+		for _, photoURL := range photoURLs {
+			err := registerAndSaveImage(ctx, qtx, artist, photoURL)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
@@ -250,9 +247,9 @@ func downloadImagesFromLink(directory string, link string) int {
 		}
 	})
 
-	c.Visit(baseURL + link)
+	c.Visit(BASE_URL + link)
 
-	return len(photos)
+	return len(photoURLs)
 }
 
 func main() {
