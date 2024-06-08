@@ -18,6 +18,7 @@ import (
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
 	"github.com/chrischriscris/kpopapi/internal/db/utils"
 	"github.com/gocolly/colly"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const baseURL = "https://kpopping.com"
@@ -76,28 +77,97 @@ func downloadImage(url string, directory string, photo string) (string, error) {
 
 // =========== Database logic ===========
 
-func saveImageToDB() {
-	ctx, conn, err := utils.ConnectDB()
-	if err != nil {
-		log.Fatalf("Unable to connect to database: %v\n", err)
+func registerAndSaveImage(
+	ctx context.Context,
+	qtx *repository.Queries,
+	url string,
+    directory string,
+	photo string,
+) error {
+
+	// Early return if the image already exists in the database
+	_, err := qtx.GetImageByUrl(ctx, url)
+	if err == nil {
+		return nil
 	}
-	defer conn.Close(context.Background())
 
-	tx, qtx, err := utils.BeginTransaction(ctx, conn)
+	entityID, isGroup, err := getGroupOrIdolIDFromDB(ctx, *qtx, directory)
 	if err != nil {
-		log.Fatalf("Unable to start transaction: %v\n", err)
+		return err
 	}
-	defer tx.Rollback(ctx)
 
-    _, err := qtx.AddImage(ctx, "https://kpopping.com/kpics/2021/12/20211207-0001-0001.jpg")
-    if err != nil {
-        log.Fatalf("Unable to add image: %v\n", err)
-    }
+	outDir := fmt.Sprintf("%s/%s", baseDir, directory)
+	imageID, err := downloadImageAndSaveToDB(ctx, *qtx, url, outDir, photo)
+	if err != nil {
+        return err
+	}
 
-    // imageMetadata, err := qtx.AddImageMetadata(ctx, repository.AddImageMetadataParams{
-    //     ImageID: image.ID,
-    //     Width:
-    //
+	if isGroup {
+		_, err = qtx.AddGroupImage(ctx, repository.AddGroupImageParams{
+			ImageID: imageID,
+			GroupID: entityID,
+		})
+	} else {
+		_, err = qtx.AddIdolImage(ctx, repository.AddIdolImageParams{
+			ImageID: imageID,
+			IdolID:  entityID,
+		})
+	}
+
+	return err
+}
+
+// Fetches the ID of a group or idol from the database
+// Returns the ID and a true if the entity was a group, false if it was an idol
+func getGroupOrIdolIDFromDB(
+	ctx context.Context,
+	qtx repository.Queries,
+	name string,
+) (int32, bool, error) {
+	group, err := qtx.GetGroupByName(ctx, name)
+	if err == nil {
+		return group.ID, true, nil
+	}
+
+	idol, err := qtx.GetIdolByName(ctx, pgtype.Text{String: name})
+	if err == nil {
+		return idol.ID, false, nil
+	}
+
+	return 0, false, fmt.Errorf("Unable to find group or idol with name %s", name)
+}
+
+// Downloads an image from a URL and saves it to the database
+// Returns the ID of the image and an error
+func downloadImageAndSaveToDB(
+	ctx context.Context,
+	qtx repository.Queries,
+	url string,
+	outDir string,
+	photo string,
+) (int32, error) {
+	imgPath, err := downloadImage(url, outDir, photo)
+	if err != nil {
+		return 0, fmt.Errorf("Unable to download image: %v\n", err)
+	}
+
+	width, height, err := getImageDimensions(imgPath)
+	if err != nil {
+		return 0, fmt.Errorf("Unable to get image dimensions: %v\n", err)
+	}
+
+	image, err := qtx.AddImage(ctx, url)
+	if err != nil {
+		return 0, fmt.Errorf("Unable to add image: %v\n", err)
+	}
+
+	_, err = qtx.AddImageMetadata(ctx, repository.AddImageMetadataParams{
+		ImageID: image.ID,
+		Width:   int32(width),
+		Height:  int32(height),
+	})
+
+	return image.ID, err
 }
 
 // =========== Scraping logic ===========
@@ -153,21 +223,30 @@ func downloadImagesFromLink(directory string, link string) int {
 
 	c.OnScraped(func(r *colly.Response) {
 		fmt.Println("Found", len(photos), "photos for", directory)
+		ctx, conn, err := utils.ConnectDB()
+		if err != nil {
+			log.Fatalf("Unable to connect to database: %v\n", err)
+		}
+		defer conn.Close(context.Background())
+
+		tx, qtx, err := utils.BeginTransaction(ctx, conn)
+		if err != nil {
+			log.Fatalf("Unable to start transaction: %v\n", err)
+		}
+		defer tx.Rollback(ctx)
+
 		for _, photo := range photos {
 			downloadURL := baseURL + photo
 
-			outDir := fmt.Sprintf("%s/%s", baseDir, directory)
-			imgPath, err := downloadImage(downloadURL, outDir, photo)
+            err := registerAndSaveImage(ctx, qtx, downloadURL, directory, photo)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Printf("Error: %v\n", err)
 			}
+		}
 
-			width, height, err := getImageDimensions(imgPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println("Downloaded", imgPath, "with dimensions", width, "x", height)
+		err = tx.Commit(ctx)
+		if err != nil {
+			log.Fatalf("Unable to commit transaction: %v\n", err)
 		}
 	})
 
