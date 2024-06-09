@@ -20,7 +20,7 @@ func main() {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	logger := zerolog.New(consoleWriter).With().Timestamp().Logger()
 
-	// Format like: INFO "GET / HTTP/1.1" 200 13
+    // Example format: 2:58PM INF "GET / HTTP/1.1" 200 13
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:          true,
 		LogStatus:       true,
@@ -28,13 +28,7 @@ func main() {
 		LogProtocol:     true,
 		LogResponseSize: true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			logger.Info().
-				Str("method", v.Method).
-				Str("URI", v.URI).
-				Str("protocol", v.Protocol).
-				Int("status", v.Status).
-                Int64("response_size", v.ResponseSize).
-				Msg("request")
+			logger.Info().Msgf("\"%s %s %s %d\" %d", v.Method, v.URI, v.Protocol, v.Status, v.ResponseSize)
 
 			return nil
 		},
