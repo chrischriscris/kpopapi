@@ -6,13 +6,12 @@ import (
 	"log"
 	"strings"
 
+	"github.com/chrischriscris/kpopapi/internal/db"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/chrischriscris/kpopapi/internal/db/helpers"
+	"github.com/chrischriscris/kpopapi/internal/scraper"
 
 	"github.com/gocolly/colly"
 )
-
-const baseURL = "https://kpopping.com"
 
 type IdolWithGroups struct {
 	IdolName string
@@ -123,13 +122,13 @@ func addIdolToGroup(
 }
 
 func loadToDB(groups map[string][]IdolWithGroups) {
-	ctx, conn, err := helpers.ConnectDB()
+	ctx, conn, err := dbutils.ConnectDB()
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer conn.Close(context.Background())
 
-	tx, qtx, err := helpers.BeginTransaction(ctx, conn)
+	tx, qtx, err := dbutils.BeginTransaction(ctx, conn)
 	if err != nil {
 		log.Fatalf("Unable to start transaction: %v\n", err)
 	}
@@ -158,7 +157,7 @@ func loadToDB(groups map[string][]IdolWithGroups) {
 }
 
 func main() {
-	baseIdolsURL := baseURL + "/profiles/the-idols"
+	baseIdolsURL := scraperutils.BaseURL + "/profiles/the-idols"
 
 	idols := make(map[string][]IdolWithGroups)
 	idols["F"] = scrapeIdols(baseIdolsURL + "/women")

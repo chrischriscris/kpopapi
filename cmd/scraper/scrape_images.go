@@ -6,15 +6,13 @@ import (
 
 	"log"
 
-	"github.com/chrischriscris/kpopapi/internal/db/helpers"
+	"github.com/chrischriscris/kpopapi/internal/db"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/chrischriscris/kpopapi/internal/scraper/utils"
+	"github.com/chrischriscris/kpopapi/internal/scraper"
 	"github.com/gocolly/colly"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const BASE_URL = "https://kpopping.com"
-const BASE_DIR = "images"
 
 // =========== Database logic ===========
 
@@ -36,7 +34,7 @@ func registerAndSaveImage(
 		return err
 	}
 
-	outDir := fmt.Sprintf("%s/%s", BASE_DIR, artist)
+	outDir := fmt.Sprintf("%s/%s", scraperutils.BaseDir, artist)
 	imageID, err := downloadImageAndSaveToDB(ctx, *qtx, url, outDir)
 	if err != nil {
 		return err
@@ -85,12 +83,12 @@ func downloadImageAndSaveToDB(
 	url string,
 	outDir string,
 ) (int32, error) {
-	imgPath, err := utils.DownloadImage(url, outDir)
+	imgPath, err := scraperutils.DownloadImage(url, outDir)
 	if err != nil {
 		return 0, fmt.Errorf("Unable to download image: %v\n", err)
 	}
 
-	width, height, err := utils.GetImageDimensions(imgPath)
+	width, height, err := scraperutils.GetImageDimensions(imgPath)
 	if err != nil {
 		return 0, fmt.Errorf("Unable to get image dimensions: %v\n", err)
 	}
@@ -121,13 +119,13 @@ func getPageLinks() map[string][]string {
 	// links[label] = [link1, link2, ...]
 	links := make(map[string][]string)
 	c.OnHTML("div.cell", func(e *colly.HTMLElement) {
-		artist := utils.ExtractLabel(e.DOM.Find("figcaption").First().Text())
+		artist := scraperutils.ExtractLabel(e.DOM.Find("figcaption").First().Text())
 		link := e.ChildAttr("a[aria-label='picture']", "href")
 
 		links[artist] = append(links[artist], link)
 	})
 
-	c.Visit(BASE_URL + "/kpics")
+	c.Visit(scraperutils.BaseURL + "/kpics")
 
 	return links
 }
@@ -156,7 +154,7 @@ func downloadImagesFromLink(artist string, link string) int {
 	photoURLs := make([]string, 0)
 	c.OnHTML("div.justified-gallery a", func(e *colly.HTMLElement) {
 		photoPath := e.Attr("href")
-		photoURL := BASE_URL + photoPath
+		photoURL := scraperutils.BaseURL + photoPath
 
 		photoURLs = append(photoURLs, photoURL)
 	})
@@ -164,13 +162,13 @@ func downloadImagesFromLink(artist string, link string) int {
 	n_downloaded := 0
 	c.OnScraped(func(r *colly.Response) {
 		fmt.Println("Found", len(photoURLs), "photos for", artist)
-		ctx, conn, err := helpers.ConnectDB()
+		ctx, conn, err := dbutils.ConnectDB()
 		if err != nil {
 			log.Fatalf("Unable to connect to database: %v\n", err)
 		}
 		defer conn.Close(context.Background())
 
-		tx, qtx, err := helpers.BeginTransaction(ctx, conn)
+		tx, qtx, err := dbutils.BeginTransaction(ctx, conn)
 		if err != nil {
 			log.Fatalf("Unable to start transaction: %v\n", err)
 		}
@@ -193,7 +191,7 @@ func downloadImagesFromLink(artist string, link string) int {
 		}
 	})
 
-	c.Visit(BASE_URL + link)
+	c.Visit(scraperutils.BaseURL + link)
 
 	return n_downloaded
 }

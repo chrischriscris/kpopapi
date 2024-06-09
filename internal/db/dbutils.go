@@ -1,4 +1,4 @@
-package helpers
+package dbutils
 
 import (
 	"context"
@@ -35,3 +35,4 @@ func BeginTransaction(ctx context.Context, conn *pgx.Conn) (pgx.Tx, *repository.
 	qtx := instance.WithTx(tx)
     return tx, qtx, err
 }
+

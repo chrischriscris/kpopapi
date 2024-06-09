@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/chrischriscris/kpopapi/internal/db"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/chrischriscris/kpopapi/internal/db/helpers"
+	"github.com/chrischriscris/kpopapi/internal/scraper"
 
 	"github.com/gocolly/colly"
 )
-
-const baseURL = "https://kpopping.com"
 
 func scrapeGroups(url string) []string {
 	c := colly.NewCollector()
@@ -36,13 +35,13 @@ func scrapeGroups(url string) []string {
 }
 
 func loadToDB(groups map[string][]string) {
-	ctx, conn, err := helpers.ConnectDB()
+	ctx, conn, err := dbutils.ConnectDB()
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer conn.Close(context.Background())
 
-	tx, qtx, err := helpers.BeginTransaction(ctx, conn)
+	tx, qtx, err := dbutils.BeginTransaction(ctx, conn)
 	if err != nil {
 		log.Fatalf("Unable to start transaction: %v\n", err)
 	}
@@ -67,7 +66,7 @@ func loadToDB(groups map[string][]string) {
 }
 
 func main() {
-	baseGroupsURL := baseURL + "/profiles/the-groups"
+	baseGroupsURL := scraperutils.BaseURL + "/profiles/the-groups"
 
 	groups := make(map[string][]string)
 	groups["GG"] = scrapeGroups(baseGroupsURL + "/women")

@@ -1,4 +1,4 @@
-package utils
+package scraperutils
 
 import (
 	"fmt"
@@ -12,7 +12,10 @@ import (
 	"strings"
 )
 
-// =========== String manipulation =============
+const BaseURL = "https://kpopping.com"
+const BaseDir = "images"
+
+// =========== String manipulation ==========
 
 func ExtractLabel(text string) string {
 	return strings.Split(text, "\n")[3][3:]
@@ -23,7 +26,7 @@ func getFilenameFromURLResponse(resp *http.Response) string {
 	return urlParts[len(urlParts)-1]
 }
 
-// =========== Image handling  =============
+// =========== Image handling ==============
 
 func DownloadImage(url string, directory string) (string, error) {
 	resp, err := http.Get(url)
@@ -64,3 +67,4 @@ func GetImageDimensions(imagePath string) (int, int, error) {
 
 	return img.Width, img.Height, nil
 }
+
