@@ -28,3 +28,4 @@ images
 internal/db/migrations/.env
 .env
 scrape_images
+tmp
