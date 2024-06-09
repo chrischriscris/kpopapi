@@ -54,6 +54,12 @@ type Idol struct {
 	UpdatedAt pgtype.Timestamp
 }
 
+type IdolGroup struct {
+	IdolName  string
+	GroupName string
+	GroupType string
+}
+
 type IdolImage struct {
 	ID        int32
 	IdolID    int32

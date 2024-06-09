@@ -28,7 +28,7 @@ func registerAndSaveImage(
 	// Early return if the image already exists in the database
 	_, err := qtx.GetImageByUrl(ctx, url)
 	if err == nil {
-		return nil
+		return fmt.Errorf("Image already exists in the database")
 	}
 
 	entityID, isGroup, err := getGroupOrIdolIDFromDB(ctx, *qtx, artist)
@@ -69,7 +69,7 @@ func getGroupOrIdolIDFromDB(
 		return group.ID, true, nil
 	}
 
-    idol, err := qtx.GetIdolByName(ctx,pgtype.Text{String: name, Valid: true})
+	idol, err := qtx.GetIdolByName(ctx, pgtype.Text{String: name, Valid: true})
 	if err == nil {
 		return idol.ID, false, nil
 	}
@@ -161,6 +161,7 @@ func downloadImagesFromLink(artist string, link string) int {
 		photoURLs = append(photoURLs, photoURL)
 	})
 
+	n_downloaded := 0
 	c.OnScraped(func(r *colly.Response) {
 		fmt.Println("Found", len(photoURLs), "photos for", artist)
 		ctx, conn, err := helpers.ConnectDB()
@@ -178,8 +179,12 @@ func downloadImagesFromLink(artist string, link string) int {
 		for _, photoURL := range photoURLs {
 			err := registerAndSaveImage(ctx, qtx, artist, photoURL)
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				if err.Error() != "Image already exists in the database" {
+					fmt.Printf("Error: %v\n", err)
+				}
+				continue
 			}
+			n_downloaded++
 		}
 
 		err = tx.Commit(ctx)
@@ -190,7 +195,7 @@ func downloadImagesFromLink(artist string, link string) int {
 
 	c.Visit(BASE_URL + link)
 
-	return len(photoURLs)
+	return n_downloaded
 }
 
 func main() {

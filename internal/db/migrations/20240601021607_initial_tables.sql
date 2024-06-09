@@ -60,6 +60,13 @@ ALTER TABLE group_members ADD CONSTRAINT unique_group_idol UNIQUE (group_id, ido
 ALTER TABLE idol_info ADD CONSTRAINT unique_idol_info UNIQUE (idol_id);
 ALTER TABLE companies ADD CONSTRAINT unique_company_name UNIQUE (name, country);
 
+-- Views
+CREATE VIEW idol_groups AS
+SELECT i.stage_name AS idol_name, g.name AS group_name, g.type AS group_type
+FROM group_members gm
+JOIN idols i ON gm.idol_id = i.id
+JOIN groups g ON gm.group_id = g.id;
+
 -- +goose StatementEnd
 
 -- +goose Down
