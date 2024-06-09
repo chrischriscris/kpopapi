@@ -24,8 +24,8 @@ go.work.sum
 # My files
 portrait
 landscape
-images
+/images
 internal/db/migrations/.env
 .env
-scrape_images
+/scrape_images
 tmp
