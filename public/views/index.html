@@ -28,7 +28,7 @@
     </h1>
 
     <div class="mx-auto py-8 text-center bg-green-100">
-        {{ template "image" .Image }}
+        <div class="h-96 mb-4 bg-green-100">{{ template "image" .Image }}</div>
 
         <button type="button" hx-get="/random" hx-target="#image" hx-swap="outerHTML"
             class="mx-auto mt-8 px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700">
@@ -40,5 +40,5 @@
 </html>
 
 {{ end }} {{ block "image" . }}
-<img id="image" src="{{.}}" class="mx-auto mt-8 w-1/4 h-1/4 rounded-3xl shadow-lg" alt="K-Pop Photo" />
+<img id="image" src="{{.}}" class="mx-auto mt-8 h-96 w-auto rounded-3xl shadow-lg" alt="K-Pop Photo" />
 {{ end }}
