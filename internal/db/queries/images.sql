@@ -38,3 +38,9 @@ INSERT INTO group_images (
     $2
 )
 RETURNING *;
+
+-- name: GetRandomImage :one
+SELECT * FROM images
+ORDER BY random()
+LIMIT 1;
+

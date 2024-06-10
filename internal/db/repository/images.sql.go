@@ -135,3 +135,21 @@ func (q *Queries) GetImageByUrl(ctx context.Context, url string) (Image, error) 
 	)
 	return i, err
 }
+
+const getRandomImage = `-- name: GetRandomImage :one
+SELECT id, url, created_at, updated_at FROM images
+ORDER BY random()
+LIMIT 1
+`
+
+func (q *Queries) GetRandomImage(ctx context.Context) (Image, error) {
+	row := q.db.QueryRow(ctx, getRandomImage)
+	var i Image
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
