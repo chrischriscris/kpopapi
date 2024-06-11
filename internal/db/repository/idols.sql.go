@@ -121,6 +121,39 @@ func (q *Queries) GetIdolByName(ctx context.Context, name pgtype.Text) (Idol, er
 	return i, err
 }
 
+const getIdolsByNameLike = `-- name: GetIdolsByNameLike :many
+SELECT id, stage_name, name, gender, created_at, updated_at FROM idols
+WHERE stage_name ILIKE '%' || $1 || '%'
+OR name ILIKE '%' || $1 || '%'
+`
+
+func (q *Queries) GetIdolsByNameLike(ctx context.Context, dollar_1 pgtype.Text) ([]Idol, error) {
+	rows, err := q.db.Query(ctx, getIdolsByNameLike, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Idol
+	for rows.Next() {
+		var i Idol
+		if err := rows.Scan(
+			&i.ID,
+			&i.StageName,
+			&i.Name,
+			&i.Gender,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listIdols = `-- name: ListIdols :many
 SELECT id, stage_name, name, gender, created_at, updated_at FROM idols
 `

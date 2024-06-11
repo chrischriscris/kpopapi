@@ -33,3 +33,8 @@ INSERT INTO group_members (
   $1, $2
 )
 RETURNING *;
+
+-- name: GetIdolsByNameLike :many
+SELECT * FROM idols
+WHERE stage_name ILIKE '%' || $1 || '%'
+OR name ILIKE '%' || $1 || '%';

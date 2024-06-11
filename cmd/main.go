@@ -8,6 +8,7 @@ import (
 
 	dbutils "github.com/chrischriscris/kpopapi/internal/db"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
@@ -28,42 +29,64 @@ func NewTemplate() *Template {
 }
 
 type IndexData struct {
-	Name  string
-	Image string
+	Image  string
+	Idols []repository.Idol
+}
+
+func NewIndexData(image string, idols []repository.Idol) IndexData {
+	return IndexData{
+		Image:  image,
+		Idols: idols,
+	}
 }
 
 func Index(c echo.Context) error {
-	name := c.QueryParam("name")
+	ctx, conn, err := dbutils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
 
-    ctx, conn, err := dbutils.ConnectDB()
-    if err != nil {
-        return err
-    }
-    defer conn.Close(ctx)
+	queries := repository.New(conn)
+	image, err := queries.GetRandomImage(ctx)
+	if err != nil {
+		return err
+	}
 
-    queries := repository.New(conn)
-    image, err := queries.GetRandomImage(ctx)
-    if err != nil {
-        return err
-    }
-
-	return c.Render(http.StatusOK, "index", IndexData{Name: name, Image: image.Url})
+	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil))
 }
 
 func Random(c echo.Context) error {
-    ctx, conn, err := dbutils.ConnectDB()
-    if err != nil {
-        return err
-    }
-    defer conn.Close(ctx)
+	ctx, conn, err := dbutils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
 
-    queries := repository.New(conn)
-    image, err := queries.GetRandomImage(ctx)
-    if err != nil {
-        return err
-    }
+	queries := repository.New(conn)
+	image, err := queries.GetRandomImage(ctx)
+	if err != nil {
+		return err
+	}
 
-    return c.Render(http.StatusOK, "image", image.Url)
+	return c.Render(http.StatusOK, "image", image.Url)
+}
+
+func Idol(c echo.Context) error {
+	ctx, conn, err := dbutils.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
+
+	name := c.QueryParam("name")
+	queries := repository.New(conn)
+	idols, err := queries.GetIdolsByNameLike(ctx, pgtype.Text{String: name, Valid: true})
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "idols", idols)
 }
 
 func main() {
@@ -91,7 +114,8 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.GET("/", Index)
-    e.GET("/random", Random)
+	e.GET("/random", Random)
+	e.GET("/idols", Idol)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
