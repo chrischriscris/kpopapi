@@ -154,7 +154,6 @@ func downloadImages(links map[string][]string) int {
 func downloadArtistImages(artist string, links []string, ch chan int, wg *sync.WaitGroup) {
     defer wg.Done()
 
-    fmt.Println("Downloading images for", artist)
     acc := 0
 	for _, link := range links {
         acc += downloadImagesFromLink(artist, link)
