@@ -29,3 +29,4 @@ internal/db/migrations/.env
 .env
 /scrape_images
 tmp
+_images

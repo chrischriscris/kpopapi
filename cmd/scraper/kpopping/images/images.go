@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"log"
 
@@ -129,22 +130,37 @@ func getPageLinks() map[string][]string {
 	return links
 }
 
+// Downloads images from a map of artists and their links in parallel
 func downloadImages(links map[string][]string) int {
-	acc := 0
+	ch := make(chan int, len(links))
+    wg := sync.WaitGroup{}
+    wg.Add(len(links))
+
 	for artist, links := range links {
-		acc += downloadArtistImages(artist, links)
+		go downloadArtistImages(artist, links, ch, &wg)
 	}
 
-	return acc
+    wg.Wait()
+    close(ch)
+
+    total := 0
+    for n := range ch {
+        total += n
+    }
+
+	return total
 }
 
-func downloadArtistImages(artist string, links []string) int {
-	acc := 0
+func downloadArtistImages(artist string, links []string, ch chan int, wg *sync.WaitGroup) {
+    defer wg.Done()
+
+    fmt.Println("Downloading images for", artist)
+    acc := 0
 	for _, link := range links {
-		acc += downloadImagesFromLink(artist, link)
+        acc += downloadImagesFromLink(artist, link)
 	}
 
-	return acc
+    ch <- acc
 }
 
 func downloadImagesFromLink(artist string, link string) int {
@@ -191,12 +207,12 @@ func downloadImagesFromLink(artist string, link string) int {
 	})
 
 	c.Visit(scraperutils.BaseURL + link)
-
-	return n_downloaded
+    return n_downloaded
 }
 
 func main() {
 	links := getPageLinks()
+    fmt.Println("Found", len(links), "artists")
 	total := downloadImages(links)
 
 	fmt.Println("Downloaded", total, "images")
