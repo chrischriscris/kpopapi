@@ -244,21 +244,29 @@ func main() {
 		log.Fatalf("Unable to create scheduler: %v\n", err)
 	}
 
-    _, err = s.NewJob(
+	_, err = s.NewJob(
 		gocron.DurationJob(2*time.Hour),
 		gocron.NewTask(ScrapeImages),
-        gocron.WithName("kpopping image scraper"),
+		gocron.WithName("kpopping image scraper"),
 	)
 	if err != nil {
 		log.Fatalf("Unable to create job: %v\n", err)
 	}
 
-    fmt.Println("Starting scheduled jobs:")
-    for _, job := range s.Jobs() {
-        fmt.Printf("  + %s\n", job.Name())
-    }
+	fmt.Println("Starting scheduled jobs:")
+	for _, job := range s.Jobs() {
+		fmt.Printf("  + %s\n", job.Name())
+	}
 
 	s.Start()
+
+	// First run inmediately
+	for _, j := range s.Jobs() {
+		err := j.RunNow()
+		if err != nil {
+			fmt.Printf("Error running job %s: %v\n", j.Name(), err)
+		}
+	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -266,14 +274,13 @@ func main() {
 	go func() {
 		<-c
 		fmt.Println("Shutting down scheduled jobs...")
-        err = s.Shutdown()
-        if err != nil {
-            log.Fatalf("Unable to shutdown gracefully: %v\n", err)
-        }
+		err = s.Shutdown()
+		if err != nil {
+			log.Fatalf("Unable to shutdown gracefully: %v\n", err)
+		}
 
-        os.Exit(0)
+		os.Exit(0)
 	}()
 
 	select {}
 }
-
