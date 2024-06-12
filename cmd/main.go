@@ -29,13 +29,13 @@ func NewTemplate() *Template {
 }
 
 type IndexData struct {
-	Image  string
+	Image string
 	Idols []repository.Idol
 }
 
 func NewIndexData(image string, idols []repository.Idol) IndexData {
 	return IndexData{
-		Image:  image,
+		Image: image,
 		Idols: idols,
 	}
 }

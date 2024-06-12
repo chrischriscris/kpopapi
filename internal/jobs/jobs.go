@@ -1,15 +1,21 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/go-co-op/gocron/v2"
+
+	"context"
 	"sync"
 
 	"log"
 
-	"github.com/chrischriscris/kpopapi/internal/db"
+	dbutils "github.com/chrischriscris/kpopapi/internal/db"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/chrischriscris/kpopapi/internal/scraper"
+	scraperutils "github.com/chrischriscris/kpopapi/internal/scraper"
 	"github.com/gocolly/colly"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -135,42 +141,42 @@ func getPageLinks() map[string][]string {
 // Downloads images from a map of artists and their links in parallel
 func downloadImages(artistsLinks map[string][]string) int {
 	ch := make(chan int, len(artistsLinks))
-    wg := sync.WaitGroup{}
-    wg.Add(len(artistsLinks))
-    sem := make(chan struct{}, MAX_GO_ROUTINES)
+	wg := sync.WaitGroup{}
+	wg.Add(len(artistsLinks))
+	sem := make(chan struct{}, MAX_GO_ROUTINES)
 
 	for artist, links := range artistsLinks {
 		go downloadArtistImages(artist, links, ch, &wg, sem)
 	}
 
-    wg.Wait()
-    close(ch)
+	wg.Wait()
+	close(ch)
 
-    total := 0
-    for n := range ch {
-        total += n
-    }
+	total := 0
+	for n := range ch {
+		total += n
+	}
 
 	return total
 }
 
 func downloadArtistImages(
-    artist string,
-    links []string,
-    ch chan int,
-    wg *sync.WaitGroup,
-    sem chan struct{},
+	artist string,
+	links []string,
+	ch chan int,
+	wg *sync.WaitGroup,
+	sem chan struct{},
 ) {
-    defer wg.Done()
-    sem <- struct{}{}
+	defer wg.Done()
+	sem <- struct{}{}
 
-    acc := 0
+	acc := 0
 	for _, link := range links {
-        acc += downloadImagesFromLink(artist, link)
+		acc += downloadImagesFromLink(artist, link)
 	}
 
-    ch <- acc
-    <-sem
+	ch <- acc
+	<-sem
 }
 
 func downloadImagesFromLink(artist string, link string) int {
@@ -184,9 +190,9 @@ func downloadImagesFromLink(artist string, link string) int {
 		photoURLs = append(photoURLs, photoURL)
 	})
 
-    c.OnError(func(r *colly.Response, err error) {
-        fmt.Printf("Error on artist %s: %v\n", artist, err)
-    })
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Printf("Error on artist %s: %v\n", artist, err)
+	})
 
 	n_downloaded := 0
 	c.OnScraped(func(r *colly.Response) {
@@ -221,17 +227,53 @@ func downloadImagesFromLink(artist string, link string) int {
 	})
 
 	c.Visit(scraperutils.BaseURL + link)
-    return n_downloaded
+	return n_downloaded
 }
 
 func ScrapeImages() {
-    links := getPageLinks()
-    fmt.Println("Found", len(links), "artists to scrape")
-    total := downloadImages(links)
+	links := getPageLinks()
+	fmt.Println("Found", len(links), "pages to scrape")
+	total := downloadImages(links)
 
-    fmt.Println("Downloaded", total, "images")
+	fmt.Println("Downloaded", total, "images")
 }
 
 func main() {
-    ScrapeImages()
+	s, err := gocron.NewScheduler()
+	if err != nil {
+		log.Fatalf("Unable to create scheduler: %v\n", err)
+	}
+
+    _, err = s.NewJob(
+		gocron.DurationJob(2*time.Hour),
+		gocron.NewTask(ScrapeImages),
+        gocron.WithName("kpopping image scraper"),
+	)
+	if err != nil {
+		log.Fatalf("Unable to create job: %v\n", err)
+	}
+
+    fmt.Println("Starting scheduled jobs:")
+    for _, job := range s.Jobs() {
+        fmt.Printf("  + %s\n", job.Name())
+    }
+
+	s.Start()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		<-c
+		fmt.Println("Shutting down scheduled jobs...")
+        err = s.Shutdown()
+        if err != nil {
+            log.Fatalf("Unable to shutdown gracefully: %v\n", err)
+        }
+
+        os.Exit(0)
+	}()
+
+	select {}
 }
+
