@@ -1,12 +1,16 @@
 package index
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	dbutils "github.com/chrischriscris/kpopapi/internal/db"
-	images "github.com/chrischriscris/kpopapi/internal/scraper/kpopping"
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
+	images "github.com/chrischriscris/kpopapi/internal/scraper/kpopping"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
@@ -71,8 +75,28 @@ func Idol(c echo.Context) error {
 	return c.Render(http.StatusOK, "idols", idols)
 }
 
-func FetchNewImages(c echo.Context) error {
-    images.ScrapeImages()
+// This can be better, not loading the .env file every time
+func isAdmin(c *echo.Context) error {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
-    return c.String(http.StatusOK, "Successfully fetched new images")
+    auth := (*c).Request().Header.Get("Authorization")
+    if auth != os.Getenv("SECRET") {
+        return fmt.Errorf("Unauthorized")
+    }
+
+    return nil
+}
+
+func FetchNewImages(c echo.Context) error {
+    err := isAdmin(&c)
+    if err != nil {
+        return c.String(http.StatusUnauthorized, "Unauthorized")
+    }
+
+    n := images.ScrapeImages()
+    msg := fmt.Sprintf("Successfully fetched %d new images", n)
+    return c.String(http.StatusOK, msg)
 }

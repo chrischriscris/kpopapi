@@ -1,4 +1,4 @@
-package kpopping
+package images
 
 import (
 	"context"
@@ -222,11 +222,13 @@ func downloadImagesFromLink(artist string, link string) int {
 	return n_downloaded
 }
 
-func ScrapeImages() {
+func ScrapeImages() int {
 	links := getPageLinks()
 	fmt.Println("Found", len(links), "artists to scrape")
 
 	total := downloadImages(links)
 
 	fmt.Println("Downloaded", total, "images")
+
+    return total
 }
