@@ -53,6 +53,7 @@ func main() {
 	e.GET("/idols/random", index.Random)
 	e.GET("/idols", index.Idol)
 	e.POST("/fetch-new-images", index.FetchNewImages)
+    e.GET("/health", index.Health)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

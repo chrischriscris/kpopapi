@@ -100,3 +100,7 @@ func FetchNewImages(c echo.Context) error {
     msg := fmt.Sprintf("Successfully fetched %d new images", n)
     return c.String(http.StatusOK, msg)
 }
+
+func Health(c echo.Context) error {
+    return c.String(http.StatusOK, "OK")
+}
