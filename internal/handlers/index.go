@@ -83,6 +83,7 @@ func isAdmin(c *echo.Context) error {
 	}
 
     auth := (*c).Request().Header.Get("Authorization")
+    fmt.Println(auth)
     if auth != os.Getenv("SECRET") {
         return fmt.Errorf("Unauthorized")
     }
