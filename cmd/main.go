@@ -3,12 +3,9 @@ package main
 import (
 	"html/template"
 	"io"
-	"net/http"
 	"os"
 
-	dbutils "github.com/chrischriscris/kpopapi/internal/db"
-	"github.com/chrischriscris/kpopapi/internal/db/repository"
-	"github.com/jackc/pgx/v5/pgtype"
+	index "github.com/chrischriscris/kpopapi/internal/handlers"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
@@ -26,67 +23,6 @@ func NewTemplate() *Template {
 	return &Template{
 		templates: template.Must(template.ParseGlob("public/views/*.html")),
 	}
-}
-
-type IndexData struct {
-	Image string
-	Idols []repository.Idol
-}
-
-func NewIndexData(image string, idols []repository.Idol) IndexData {
-	return IndexData{
-		Image: image,
-		Idols: idols,
-	}
-}
-
-func Index(c echo.Context) error {
-	ctx, conn, err := dbutils.ConnectDB()
-	if err != nil {
-		return err
-	}
-	defer conn.Close(ctx)
-
-	queries := repository.New(conn)
-	image, err := queries.GetRandomImage(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil))
-}
-
-func Random(c echo.Context) error {
-	ctx, conn, err := dbutils.ConnectDB()
-	if err != nil {
-		return err
-	}
-	defer conn.Close(ctx)
-
-	queries := repository.New(conn)
-	image, err := queries.GetRandomImage(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Render(http.StatusOK, "image", image.Url)
-}
-
-func Idol(c echo.Context) error {
-	ctx, conn, err := dbutils.ConnectDB()
-	if err != nil {
-		return err
-	}
-	defer conn.Close(ctx)
-
-	name := c.QueryParam("name")
-	queries := repository.New(conn)
-	idols, err := queries.GetIdolsByNameLike(ctx, pgtype.Text{String: name, Valid: true})
-	if err != nil {
-		return err
-	}
-
-	return c.Render(http.StatusOK, "idols", idols)
 }
 
 func main() {
@@ -113,9 +49,10 @@ func main() {
 
 	e.Use(middleware.Recover())
 
-	e.GET("/", Index)
-	e.GET("/random", Random)
-	e.GET("/idols", Idol)
+	e.GET("/", index.Index)
+	e.GET("/idols/random", index.Random)
+	e.GET("/idols", index.Idol)
+	e.GET("/fetch-new-images", index.FetchNewImages)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
