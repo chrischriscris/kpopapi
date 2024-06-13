@@ -1,63 +1,128 @@
 {{ block "index" . }}
 <!doctype html>
 <html>
-
-<head>
+  <head>
     <title>The K-Pop API</title>
-</head>
+    <link rel="icon" href="/static/logo.png" type="image/svg+xml" />
+  </head>
 
-<!-- To play in the meantime. Replace later with installed Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com"></script>
+  <!-- To play in the meantime. Replace later with installed Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
-<style>
+  <style>
     * {
-        font-family:
-            JetBrains Mono,
-            monospace;
-        margin: 0;
-        padding: 0;
-        background-color: #f0f0f0;
+      font-family:
+        JetBrains Mono,
+        monospace;
+      margin: 0;
+      padding: 0;
     }
-</style>
+  </style>
 
-<body>
-    <h1 class="p-8 text-4xl text-center text-gray-800 font-bold bg-red-100">
-        Welcome to the K-Pop API!
+  <body>
+    <nav>
+      <div
+        class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 bg-red-100"
+      >
+        <a href="" class="flex items-center space-x-3 rtl:space-x-reverse">
+          <img src="/static/logo.png" class="h-10" alt="The K-Pop API Logo" />
+          <span
+            class="self-center text-2xl font-semibold whitespace-nowrap bg-gradient-to-r from-red-600 via-indigo-700 to-purple-900 inline-block text-transparent bg-clip-text"
+            >The K-Pop API</span
+          >
+        </a>
+        <button
+          data-collapse-toggle="navbar-default"
+          type="button"
+          class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+          aria-controls="navbar-default"
+          aria-expanded="false"
+        >
+          <span class="sr-only">Open main menu</span>
+          <svg
+            class="w-5 h-5"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 17 14"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15"
+            />
+          </svg>
+        </button>
+        <div>
+          <ul class="hidden md:flex md:space-x-4 flex-wrap">
+            <li>
+              <a href="#" class="block py-2 px-3" aria-current="page"
+                >Home</a
+              >
+            </li>
+            <li>
+              <a href="#" class="block py-2 px-3">About</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <h1 class="p-8 text-4xl text-center text-gray-800 font-bold">
+      Welcome to the K-Pop API!
     </h1>
 
     <div class="mx-auto py-8 text-center bg-green-100">
-        <div class="h-96 mb-4 bg-green-100">{{ template "image" .Image }}</div>
+      <div class="h-96 mb-4 bg-green-100">{{ template "image" .Image }}</div>
 
-        <button type="button" hx-get="/idols/random" hx-target="#image" hx-swap="outerHTML"
-            class="mx-auto mt-8 px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700">
-            Get another random image
-        </button>
+      <button
+        type="button"
+        hx-get="/idols/random"
+        hx-target="#image"
+        hx-swap="outerHTML"
+        class="mx-auto mt-8 px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700"
+      >
+        Get another random image
+      </button>
     </div>
 
     <div class="mx-auto py-8 text-center bg-green-100">
-        <form hx-get="/idols" hx-target="#idols" hx-swap="innerHTML">
-            <input type="search" name="name" placeholder="Search for a K-Pop idol"
-                class="px-4 py-2 text-gray-800 bg-white rounded-lg shadow-lg" />
-            <button type="submit" class="px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700">
-                Search
-            </button>
-        </form>
+      <form hx-get="/idols" hx-target="#idols" hx-swap="innerHTML">
+        <input
+          type="search"
+          name="name"
+          placeholder="Search for a K-Pop idol"
+          class="px-4 py-2 text-gray-800 bg-white rounded-lg shadow-lg"
+        />
+        <button
+          type="submit"
+          class="px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700"
+        >
+          Search
+        </button>
+      </form>
 
-        <div id="idols">{{ template "idols" .Idols }}</div>
+      <div id="idols">{{ template "idols" .Idols }}</div>
     </div>
-</body>
-
+  </body>
 </html>
 {{ end }} {{ block "image" . }}
-<img id="image" src="{{.}}" class="mx-auto mt-8 h-96 w-auto rounded-3xl shadow-lg" alt="K-Pop Photo" />
+<img
+  id="image"
+  src="{{.}}"
+  class="mx-auto mt-8 h-96 w-auto rounded-3xl shadow-lg"
+  alt="K-Pop Photo"
+/>
 {{ end }} {{ block "idols" . }} {{ if eq (len .) 0 }}
 <p class="mt-8 text-gray-800 bg-blue-100">No idols found</p>
 {{ else }}
 <ul class="py-8 overflow-y-auto h-96">
-    {{ range . }}
-    <li class="text-gray-800">{{.StageName}}</li>
-    {{ end }}
+  {{ range . }}
+  <li class="text-gray-800">{{.StageName}}</li>
+  {{ end }}
 </ul>
 {{ end }} {{ end }}

@@ -27,6 +27,7 @@ func NewTemplate() *Template {
 
 func main() {
 	e := echo.New()
+    e.Static("/static", "public/assets")
 
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	logger := zerolog.New(consoleWriter).With().Timestamp().Logger()
@@ -52,8 +53,9 @@ func main() {
 	e.GET("/", index.Index)
 	e.GET("/idols/random", index.Random)
 	e.GET("/idols", index.Idol)
-	e.POST("/fetch-new-images", index.FetchNewImages)
     e.GET("/health", index.Health)
+
+	e.POST("/fetch-new-images", index.FetchNewImages)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
