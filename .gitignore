@@ -30,3 +30,4 @@ internal/db/migrations/.env
 /scrape_images
 tmp
 _images
+scrape-images-server
