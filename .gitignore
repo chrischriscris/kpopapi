@@ -27,7 +27,7 @@ landscape
 /images
 internal/db/migrations/.env
 .env
-/scrape_images
 tmp
 _images
 scrape-images-server
+scrape-images
