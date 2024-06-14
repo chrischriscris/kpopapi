@@ -11,7 +11,7 @@ import (
 
 type scheduler struct {
 	scheduler *gocron.Scheduler
-    enabled bool
+	enabled   bool
 }
 
 func newScheduler() (*scheduler, error) {
@@ -22,7 +22,7 @@ func newScheduler() (*scheduler, error) {
 
 	return &scheduler{
 		scheduler: &s,
-        enabled: true,
+		enabled:   true,
 	}, nil
 }
 
@@ -42,23 +42,23 @@ func (s *scheduler) addJob(
 
 // Run all jobs immediately and start the scheduler
 func (s *scheduler) Start() {
-    if !s.enabled {
-        return
-    }
+	if !s.enabled {
+		return
+	}
 
-    fmt.Println("Starting scheduler with jobs: ")
+	fmt.Println("Starting scheduler with jobs: ")
 
-    job := (*s.scheduler).Jobs();
+	job := (*s.scheduler).Jobs()
 
-    for _, j := range job {
-        fmt.Printf("  + %s\n", j.Name())
-    }
-
-    for _, j := range job {
-        j.RunNow()
-    }
+	for _, j := range job {
+		fmt.Printf("  + %s\n", j.Name())
+	}
 
 	(*s.scheduler).Start()
+
+	for _, j := range job {
+		j.RunNow()
+	}
 }
 
 func (s *scheduler) Shutdown() error {
@@ -66,11 +66,11 @@ func (s *scheduler) Shutdown() error {
 }
 
 func (s *scheduler) Enable() {
-    s.enabled = true
+	s.enabled = true
 }
 
 func (s *scheduler) Disable() {
-    s.enabled = false
+	s.enabled = false
 }
 
 func KPopApiScheduler() *scheduler {
@@ -84,5 +84,5 @@ func KPopApiScheduler() *scheduler {
 		log.Fatalf("Unable to create job: %v\n", err)
 	}
 
-    return s
+	return s
 }
