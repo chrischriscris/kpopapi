@@ -6,9 +6,11 @@ import (
 	"os"
 
 	index "github.com/chrischriscris/kpopapi/internal/handlers"
+	"github.com/chrischriscris/kpopapi/internal/scheduler"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
+    _ "github.com/joho/godotenv/autoload"
 )
 
 type Template struct {
@@ -56,6 +58,13 @@ func main() {
     e.GET("/health", index.Health)
 
 	e.POST("/fetch-new-images", index.FetchNewImages)
+
+    s := scheduler.KPopApiScheduler()
+    if os.Getenv("APP_ENV") == "dev" {
+        s.Disable()
+    }
+    s.Start()
+    defer s.Shutdown()
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

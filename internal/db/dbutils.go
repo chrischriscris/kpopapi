@@ -7,15 +7,10 @@ import (
 
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
 	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func ConnectDB() (context.Context, *pgx.Conn, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, os.Getenv("DB_CONN_STRING"))
 	if err != nil {
