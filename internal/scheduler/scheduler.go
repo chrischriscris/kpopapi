@@ -35,12 +35,12 @@ func (s *scheduler) addJob(
 		gocron.DurationJob(duration),
 		gocron.NewTask(task),
 		gocron.WithName(name),
+        gocron.JobOption(gocron.WithStartImmediately()),
 	)
 
 	return err
 }
 
-// Run all jobs immediately and start the scheduler
 func (s *scheduler) Start() {
 	if !s.enabled {
 		return
@@ -55,10 +55,6 @@ func (s *scheduler) Start() {
 	}
 
 	(*s.scheduler).Start()
-
-	for _, j := range job {
-		j.RunNow()
-	}
 }
 
 func (s *scheduler) Shutdown() error {

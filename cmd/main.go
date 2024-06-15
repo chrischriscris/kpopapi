@@ -29,7 +29,7 @@ func NewTemplate() *Template {
 
 func main() {
 	e := echo.New()
-    e.Static("/static", "public/assets")
+    e.Static("/static", "public/static")
 
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	logger := zerolog.New(consoleWriter).With().Timestamp().Logger()
