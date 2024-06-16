@@ -58,13 +58,17 @@ func Random(c echo.Context) error {
 }
 
 func Idol(c echo.Context) error {
+	name := c.QueryParam("name")
+    if name == "" {
+        c.Render(http.StatusOK, "idol", nil)
+    }
+
 	ctx, conn, err := dbutils.ConnectDB()
 	if err != nil {
 		return err
 	}
 	defer conn.Close(ctx)
 
-	name := c.QueryParam("name")
 	queries := repository.New(conn)
 	idols, err := queries.GetIdolsByNameLike(ctx, pgtype.Text{String: name, Valid: true})
 	if err != nil {
