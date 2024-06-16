@@ -84,7 +84,7 @@ func Idol(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "idols", idols)
+	return c.Render(http.StatusOK, "result", idols)
 }
 
 // This can be better, not loading the .env file every time

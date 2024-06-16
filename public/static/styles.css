@@ -1,0 +1,53 @@
+* {
+  font-family: "Playfair Display", sans-serif;
+  font-weight: 800;
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  font-family: "Roboto", sans-serif;
+  list-style-type: none;
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes shrink-x {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.slide-it {
+  view-transition-name: slide-it;
+}
+
+::view-transition-old(slide-it),
+::view-transition-new(slide-it) {
+  height: auto;
+  right: 0;
+  left: auto;
+  transform-origin: right center;
+}
+
+::view-transition-old(figure-caption) {
+  animation: 0.25s linear both grow-x;
+}
+
+::view-transition-new(figure-caption) {
+  animation: 0.25s 0.25s linear both shrink-x;
+}

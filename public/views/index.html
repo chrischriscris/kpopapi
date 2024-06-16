@@ -18,6 +18,8 @@
       rel="stylesheet"
     />
 
+    <link rel="stylesheet" href="/static/styles.css" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- To play in the meantime. Replace later with installed Tailwind CSS -->
@@ -25,19 +27,7 @@
 
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
-    <style>
-      * {
-        font-family: "Playfair Display", sans-serif;
-        font-weight: 800;
-        margin: 0;
-        padding: 0;
-      }
-
-      ul {
-        font-family: "Roboto", sans-serif;
-        list-style-type: none;
-      }
-    </style>
+    <script src="/static/scripts.js" defer></script>
 
     <link
       rel="apple-touch-icon"
@@ -124,7 +114,7 @@
 
     <!-- Main content -->
     <main class="bg-teal-50">
-        <div class="flex flex-col-reverse md:flex-row">
+      <div class="flex flex-col-reverse md:flex-row">
         <!-- Left side -->
         <div class="flex-1 grow-[2]">
           <h1 class="pt-8 text-4xl text-center text-gray-800 underline">
@@ -138,7 +128,7 @@
           <p class="pb-8 text-md text-center text-gray-400">
             +{{ .NumberOfImages }} images ready to be discovered
           </p>
-          <div id="idols">{{ template "search_container" .Idols }}</div>
+          <div>{{ template "search_container" .Idols }}</div>
         </div>
 
         <!-- Right side -->
@@ -155,15 +145,16 @@
 
 <div class="h-[calc(100vh-200px)] border-2 border-black m-8 relative">
   {{ template "image" . }}
-
   <button
     type="button"
     hx-get="/idols/random"
     hx-target="#image"
-    hx-swap="outerHTML"
-    class="fixed bottom-6 right-6 p-4 text-white text-xl bg-black hover:bg-gray-900"
+    hx-swap="outerHTML transition:true  show:window:top settle:0.5s"
+    class="fixed bottom-6 right-6 p-4 text-white text-xl bg-black hover:bg-gray-900 z-50 select-none"
+    onclick="handleClickOnRandom()"
   >
     <svg
+      id="random-icon"
       width="15"
       height="15"
       viewBox="0 0 15 15"
@@ -186,7 +177,7 @@
   id="image"
   src="{{.}}"
   onerror="this.src='/static/missing-image.png'"
-  class="h-full object-cover m-4"
+  class="select-none h-full object-cover m-4 slide-it"
   alt="K-Pop Photo"
 />
 {{ end }} {{ block "search_container" . }}
@@ -249,7 +240,7 @@
       </button>
     </form>
     <div class="h-full mt-2 overflow-y-auto">
-      <ul class="px-4 py-2 text-2xl">
+      <ul class="px-4 py-2 text-2xl" id="idols">
         {{ template "result" . }}
       </ul>
     </div>
