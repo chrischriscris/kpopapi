@@ -43,6 +43,8 @@ func Index(c echo.Context) error {
     n, err := queries.GetNumberOfImages(ctx)
     if err != nil {
         n = 0
+    } else {
+        n -= 1
     }
 
 	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil, n))
