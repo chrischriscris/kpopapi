@@ -136,6 +136,17 @@ func (q *Queries) GetImageByUrl(ctx context.Context, url string) (Image, error) 
 	return i, err
 }
 
+const getNumberOfImages = `-- name: GetNumberOfImages :one
+SELECT COUNT(*) FROM images
+`
+
+func (q *Queries) GetNumberOfImages(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getNumberOfImages)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getRandomImage = `-- name: GetRandomImage :one
 SELECT id, url, created_at, updated_at FROM images
 ORDER BY random()

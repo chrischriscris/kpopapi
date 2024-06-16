@@ -2,7 +2,6 @@ package index
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -10,19 +9,21 @@ import (
 	"github.com/chrischriscris/kpopapi/internal/db/repository"
 	images "github.com/chrischriscris/kpopapi/internal/scraper/kpopping"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
 )
 
 type IndexData struct {
 	Image string
 	Idols []repository.Idol
+    NumberOfImages int64
 }
 
-func NewIndexData(image string, idols []repository.Idol) IndexData {
+func NewIndexData(image string, idols []repository.Idol, n int64) IndexData {
 	return IndexData{
 		Image: image,
 		Idols: idols,
+        NumberOfImages: n,
 	}
 }
 
@@ -39,7 +40,14 @@ func Index(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil))
+    n, err := queries.GetNumberOfImages(ctx)
+    if err != nil {
+        n = 0
+    } else {
+        n -= 1
+    }
+
+	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil, n))
 }
 
 func Random(c echo.Context) error {
@@ -59,13 +67,17 @@ func Random(c echo.Context) error {
 }
 
 func Idol(c echo.Context) error {
+	name := c.QueryParam("name")
+    if name == "" {
+        return c.Render(http.StatusOK, "idol", nil)
+    }
+
 	ctx, conn, err := dbutils.ConnectDB()
 	if err != nil {
 		return err
 	}
 	defer conn.Close(ctx)
 
-	name := c.QueryParam("name")
 	queries := repository.New(conn)
 	idols, err := queries.GetIdolsByNameLike(ctx, pgtype.Text{String: name, Valid: true})
 	if err != nil {
@@ -77,11 +89,6 @@ func Idol(c echo.Context) error {
 
 // This can be better, not loading the .env file every time
 func isAdmin(c *echo.Context) error {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
     auth := (*c).Request().Header.Get("Authorization")
     if auth != os.Getenv("SECRET") {
         return fmt.Errorf("Unauthorized")

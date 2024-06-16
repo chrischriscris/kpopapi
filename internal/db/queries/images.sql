@@ -44,3 +44,5 @@ SELECT * FROM images
 ORDER BY random()
 LIMIT 1;
 
+-- name: GetNumberOfImages :one
+SELECT COUNT(*) FROM images;
