@@ -3,7 +3,22 @@
 <html>
   <head>
     <title>The K-Pop API</title>
-    <link rel="icon" href="/static/favicon.ico" type="image/svg+xml" />
+
+    <!-- Poetsen One -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Honk&family=Playwrite+NL:wght@100..400&family=Poetsen+One&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Honk&family=Playwrite+NL:wght@100..400&family=Poetsen+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <!-- To play in the meantime. Replace later with installed Tailwind CSS -->
@@ -13,26 +28,40 @@
 
   <style>
     * {
-      font-family:
-        JetBrains Mono,
-        monospace;
+      font-family: "Poetsen One", sans-serif;
       margin: 0;
       padding: 0;
+    }
+
+    ul {
+      list-style-type: none;
+    }
+
+    .nav-right {
+      font-family: "Roboto", sans-serif;
+      font-weight: 500;
     }
   </style>
 
   <body>
     <nav>
-      <div
-        class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 bg-red-100"
-      >
+      <div class="flex flex-wrap justify-between p-4 bg-red-100">
+        <!-- Left side -->
         <a href="" class="flex items-center space-x-3 rtl:space-x-reverse">
           <img src="/static/logo.png" class="h-10" alt="The K-Pop API Logo" />
+        </a>
+
+        <!-- Center -->
+        <div
+          class="flex items-center space-x-3 rtl:space-x-reverse bg-transparent select-none"
+        >
           <span
-            class="self-center text-2xl font-semibold whitespace-nowrap bg-gradient-to-r from-red-600 via-indigo-700 to-purple-900 inline-block text-transparent bg-clip-text"
+            class="self-center text-4xl whitespace-nowrap bg-gradient-to-r from-red-600 via-indigo-700 to-purple-900 text-transparent bg-clip-text"
             >The K-Pop API</span
           >
-        </a>
+        </div>
+
+        <!-- Right side (mobile viewport) -->
         <button
           data-collapse-toggle="navbar-default"
           type="button"
@@ -57,57 +86,69 @@
             />
           </svg>
         </button>
-        <div>
-          <ul class="hidden md:flex md:space-x-4 flex-wrap">
-            <li>
-              <a href="#" class="block py-2 px-3" aria-current="page"
-                >Home</a
-              >
-            </li>
-            <li>
-              <a href="#" class="block py-2 px-3">About</a>
-            </li>
-          </ul>
-        </div>
+
+        <!-- Right side (desktop viewport) -->
+        <!-- Use Roboto font for the navigation links -->
+        <ul class="md:flex md:space-x-4 flex-wrap font-serif">
+          <li>
+            <a href="#" class="nav-right block py-2 px-3">ABOUT</a>
+          </li>
+          <li>
+            <a href="#" class="nav-right block py-2 px-3" aria-current="page"
+              >HOME</a
+            >
+          </li>
+        </ul>
       </div>
     </nav>
 
-    <h1 class="p-8 text-4xl text-center text-gray-800 font-bold">
-      Welcome to the K-Pop API!
-    </h1>
+    <!-- Main content -->
+    <main class="bg-green-100">
+      <div class="flex sm:flex-col md:flex-row">
+        <!-- Left side -->
+        <div class="flex-1">
+          <h1 class="p-8 text-4xl text-center text-gray-800">
+            Unleash Your Inner Bias
+          </h1>
 
-    <div class="mx-auto py-8 text-center bg-green-100">
-      <div class="h-96 mb-4 bg-green-100">{{ template "image" .Image }}</div>
+          <div class="mx-auto text-center">
+            <form hx-get="/idols" hx-target="#idols" hx-swap="innerHTML">
+              <input
+                type="search"
+                name="name"
+                placeholder="Search for your favorite idol"
+                class="px-4 py-2 text-gray-800 bg-white rounded-lg shadow-lg"
+              />
+              <button
+                type="submit"
+                class="px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700"
+              >
+                Search
+              </button>
+            </form>
 
-      <button
-        type="button"
-        hx-get="/idols/random"
-        hx-target="#image"
-        hx-swap="outerHTML"
-        class="mx-auto mt-8 px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700"
-      >
-        Get another random image
-      </button>
-    </div>
+            <div id="idols">{{ template "idols" .Idols }}</div>
+          </div>
+        </div>
 
-    <div class="mx-auto py-8 text-center bg-green-100">
-      <form hx-get="/idols" hx-target="#idols" hx-swap="innerHTML">
-        <input
-          type="search"
-          name="name"
-          placeholder="Search for a K-Pop idol"
-          class="px-4 py-2 text-gray-800 bg-white rounded-lg shadow-lg"
-        />
-        <button
-          type="submit"
-          class="px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700"
-        >
-          Search
-        </button>
-      </form>
+        <!-- Right side -->
+        <div class="flex-1 grow-[2]">
+          <div class="mx-auto py-8 text-center">
+            <div class="h-96">{{ template "image" .Image }}</div>
 
-      <div id="idols">{{ template "idols" .Idols }}</div>
-    </div>
+            <button
+              type="button"
+              hx-get="/idols/random"
+              hx-target="#image"
+              hx-swap="outerHTML"
+              class="mx-auto mt-8 px-4 py-2 text-white bg-red-500 rounded-lg shadow-lg hover:bg-red-700"
+            >
+              Get another random image
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
   </body>
 </html>
 {{ end }} {{ block "image" . }}
@@ -118,12 +159,18 @@
   class="mx-auto mt-8 h-96 w-auto rounded-3xl shadow-lg"
   alt="K-Pop Photo"
 />
-{{ end }} {{ block "idols" . }} {{ if eq (len .) 0 }}
-<p class="mt-8 text-gray-800 bg-blue-100">No idols found</p>
-{{ else }}
-<ul class="py-8 overflow-y-auto h-96">
-  {{ range . }}
-  <li class="text-gray-800">{{.StageName}}</li>
-  {{ end }}
-</ul>
-{{ end }} {{ end }}
+{{ end }} {{ block "idols" . }}
+<div class="mx-8 mt-8 border-2 border-black rounded-lg">
+  <div class="p-1 rounded-lg bg-white">
+    {{ if eq (len .) 0 }}
+    <p class="py-4 rounded text-gray-800 bg-blue-100">No idols found</p>
+    {{ else }}
+    <ul class="py-4 overflow-y-auto h-96 bg-blue-100">
+      {{ range . }}
+      <li class="text-gray-800">{{.StageName}}</li>
+      {{ end }}
+    </ul>
+    {{ end }}
+  </div>
+</div>
+{{ end }}
