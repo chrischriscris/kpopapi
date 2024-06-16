@@ -62,7 +62,11 @@
       <div class="flex flex-wrap justify-between p-4 bg-black">
         <!-- Left side -->
         <a href="" class="flex items-center space-x-3 rtl:space-x-reverse">
-          <img src="/static/icons/logo.png" class="h-10" alt="The K-Pop API Logo" />
+          <img
+            src="/static/icons/logo.png"
+            class="h-10"
+            alt="The K-Pop API Logo"
+          />
         </a>
 
         <!-- Center -->
@@ -105,7 +109,7 @@
         <ul class="md:flex md:space-x-4 flex-wrap text-white">
           <li>
             <a href="#" class="block py-2 px-3 font-[Roboto] font-bold"
-              >ABOUT</a
+              >About</a
             >
           </li>
           <li>
@@ -113,7 +117,7 @@
               href="#"
               class="block py-2 px-3 font-[Roboto] font-bold"
               aria-current="page"
-              >HOME</a
+              >Home</a
             >
           </li>
         </ul>
@@ -125,10 +129,17 @@
       <div class="flex md:flex-col lg:flex-row">
         <!-- Left side -->
         <div class="flex-1 grow-[2]">
-          <h1 class="p-8 text-4xl text-center text-gray-800 underline">
+          <h1 class="pt-8 text-4xl text-center text-gray-800 underline">
             A daily dose of K-Pop visuals
           </h1>
 
+          <p class="text-md text-center text-gray-800">
+            Discover who's going to be your next bias
+          </p>
+
+          <p class="pb-8 text-md text-center text-gray-400">
+            +{{ .NumberOfImages }} images ready to be discovered
+          </p>
           <div id="idols">{{ template "idols" .Idols }}</div>
         </div>
 
@@ -215,24 +226,18 @@
             fill="currentColor"
             fill-rule="evenodd"
             clip-rule="evenodd"
-            data-darkreader-inline-fill=""
-            style="--darkreader-inline-fill: currentColor"
           ></path>
         </svg>
       </button>
     </form>
     <div class="h-full bg-blue-100 mt-2 rounded overflow-y-auto">
-      {{ if eq (len .) 0 }}
-      <div class="flex justify-center items-center h-full">
-        <p class="text-2xl text-teal-900 text-center">No idols found</p>
-      </div>
-      {{ else }}
       <ul class="px-4 py-2 text-2xl">
         {{ range . }}
         <li class="text-gray-800 py-2">{{.StageName}}</li>
+        {{ else }}
+        <li class="text-2xl text-teal-900 text-center">No idols found</li>
         {{ end }}
       </ul>
-      {{ end }}
     </div>
   </div>
 </div>

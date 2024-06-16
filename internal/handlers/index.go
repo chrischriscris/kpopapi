@@ -16,12 +16,14 @@ import (
 type IndexData struct {
 	Image string
 	Idols []repository.Idol
+    NumberOfImages int64
 }
 
-func NewIndexData(image string, idols []repository.Idol) IndexData {
+func NewIndexData(image string, idols []repository.Idol, n int64) IndexData {
 	return IndexData{
 		Image: image,
 		Idols: idols,
+        NumberOfImages: n,
 	}
 }
 
@@ -38,7 +40,12 @@ func Index(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil))
+    n, err := queries.GetNumberOfImages(ctx)
+    if err != nil {
+        n = 0
+    }
+
+	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil, n))
 }
 
 func Random(c echo.Context) error {
@@ -60,7 +67,7 @@ func Random(c echo.Context) error {
 func Idol(c echo.Context) error {
 	name := c.QueryParam("name")
     if name == "" {
-        c.Render(http.StatusOK, "idol", nil)
+        return c.Render(http.StatusOK, "idol", nil)
     }
 
 	ctx, conn, err := dbutils.ConnectDB()
