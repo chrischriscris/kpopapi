@@ -1,12 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
-  font-family: "Playfair Display", sans-serif;
+  font-family: 'Playfair Display', sans-serif;
   font-weight: 800;
   margin: 0;
   padding: 0;
 }
 
 ul {
-  font-family: "Roboto", sans-serif;
+  font-family: 'Roboto', sans-serif;
   list-style-type: none;
 }
 

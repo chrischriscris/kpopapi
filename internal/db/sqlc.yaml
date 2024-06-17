@@ -1,9 +1,9 @@
-version: "2"
+version: '2'
 sql:
-  - engine: "postgresql"
-    queries: "queries"
-    schema: "migrations"
+  - engine: 'postgresql'
+    queries: 'queries'
+    schema: 'migrations'
     gen:
       go:
-        out: "repository"
-        sql_package: "pgx/v5"
+        out: 'repository'
+        sql_package: 'pgx/v5'

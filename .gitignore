@@ -31,3 +31,4 @@ tmp
 _images
 scrape-images-server
 scrape-images
+node_modules
