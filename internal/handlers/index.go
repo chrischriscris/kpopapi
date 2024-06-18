@@ -14,16 +14,16 @@ import (
 )
 
 type IndexData struct {
-	Image string
-	Idols []repository.Idol
-    NumberOfImages int64
+	Image          string
+	Idols          []repository.Idol
+	NumberOfImages int64
 }
 
 func NewIndexData(image string, idols []repository.Idol, n int64) IndexData {
 	return IndexData{
-		Image: image,
-		Idols: idols,
-        NumberOfImages: n,
+		Image:          image,
+		Idols:          idols,
+		NumberOfImages: n,
 	}
 }
 
@@ -40,12 +40,12 @@ func Index(c echo.Context) error {
 		return err
 	}
 
-    n, err := queries.GetNumberOfImages(ctx)
-    if err != nil {
-        n = 0
-    } else {
-        n -= 1
-    }
+	n, err := queries.GetNumberOfImages(ctx)
+	if err != nil {
+		n = 0
+	} else {
+		n -= 1
+	}
 
 	return c.Render(http.StatusOK, "index", NewIndexData(image.Url, nil, n))
 }
@@ -68,9 +68,9 @@ func Random(c echo.Context) error {
 
 func Idol(c echo.Context) error {
 	name := c.QueryParam("name")
-    if name == "" {
-        return c.Render(http.StatusOK, "idol", nil)
-    }
+	if name == "" {
+		return c.Render(http.StatusOK, "idol", nil)
+	}
 
 	ctx, conn, err := dbutils.ConnectDB()
 	if err != nil {
@@ -89,25 +89,25 @@ func Idol(c echo.Context) error {
 
 // This can be better, not loading the .env file every time
 func isAdmin(c *echo.Context) error {
-    auth := (*c).Request().Header.Get("Authorization")
-    if auth != os.Getenv("SECRET") {
-        return fmt.Errorf("Unauthorized")
-    }
+	auth := (*c).Request().Header.Get("Authorization")
+	if auth != os.Getenv("SECRET") {
+		return fmt.Errorf("Unauthorized")
+	}
 
-    return nil
+	return nil
 }
 
 func FetchNewImages(c echo.Context) error {
-    err := isAdmin(&c)
-    if err != nil {
-        return c.String(http.StatusUnauthorized, "Unauthorized")
-    }
+	err := isAdmin(&c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "Unauthorized")
+	}
 
-    n := images.ScrapeImages()
-    msg := fmt.Sprintf("Successfully fetched %d new images", n)
-    return c.String(http.StatusOK, msg)
+	n := images.ScrapeImages()
+	msg := fmt.Sprintf("Successfully fetched %d new images", n)
+	return c.String(http.StatusOK, msg)
 }
 
 func Health(c echo.Context) error {
-    return c.String(http.StatusOK, "OK")
+	return c.String(http.StatusOK, "OK")
 }

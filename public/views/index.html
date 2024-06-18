@@ -145,8 +145,9 @@
     type="button"
     hx-get="/idols/random"
     hx-target="#image"
-    hx-swap="outerHTML transition:true  show:window:top settle:0.5s"
-    class="fixed bottom-6 right-6 z-50 select-none bg-black p-4 text-xl text-white hover:bg-gray-900"
+    hx-swap="outerHTML show:window:top"
+    hx-disabled-elt="this"
+    class="fixed bottom-6 right-6 z-50 select-none bg-black p-4 text-xl text-white hover:bg-gray-900 disabled:bg-gray-800"
     onclick="handleClickOnRandom()"
   >
     <svg
