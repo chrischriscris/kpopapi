@@ -122,20 +122,41 @@ func (q *Queries) GetIdolByName(ctx context.Context, name pgtype.Text) (Idol, er
 }
 
 const getIdolsByNameLike = `-- name: GetIdolsByNameLike :many
-SELECT id, stage_name, name, gender, created_at, updated_at FROM idols
-WHERE stage_name ILIKE '%' || $1 || '%'
-OR name ILIKE '%' || $1 || '%'
+SELECT i.id, i.stage_name, i.name, i.gender, i.created_at, i.updated_at, g.id, g.name, g.type, g.debut_date, g.company_id, g.created_at, g.updated_at
+FROM idols i
+LEFT JOIN group_members gm
+ON i.id = gm.idol_id
+LEFT JOIN groups g
+ON gm.group_id = g.id
+WHERE i.stage_name ILIKE '%' || $1 || '%'
+OR i.name ILIKE '%' || $1 || '%'
 `
 
-func (q *Queries) GetIdolsByNameLike(ctx context.Context, dollar_1 pgtype.Text) ([]Idol, error) {
+type GetIdolsByNameLikeRow struct {
+	ID          int32
+	StageName   string
+	Name        pgtype.Text
+	Gender      string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	ID_2        pgtype.Int4
+	Name_2      pgtype.Text
+	Type        pgtype.Text
+	DebutDate   pgtype.Date
+	CompanyID   pgtype.Int4
+	CreatedAt_2 pgtype.Timestamp
+	UpdatedAt_2 pgtype.Timestamp
+}
+
+func (q *Queries) GetIdolsByNameLike(ctx context.Context, dollar_1 pgtype.Text) ([]GetIdolsByNameLikeRow, error) {
 	rows, err := q.db.Query(ctx, getIdolsByNameLike, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Idol
+	var items []GetIdolsByNameLikeRow
 	for rows.Next() {
-		var i Idol
+		var i GetIdolsByNameLikeRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.StageName,
@@ -143,6 +164,13 @@ func (q *Queries) GetIdolsByNameLike(ctx context.Context, dollar_1 pgtype.Text) 
 			&i.Gender,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ID_2,
+			&i.Name_2,
+			&i.Type,
+			&i.DebutDate,
+			&i.CompanyID,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
 		); err != nil {
 			return nil, err
 		}
