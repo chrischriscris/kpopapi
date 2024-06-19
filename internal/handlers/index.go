@@ -13,15 +13,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type IdolWithGroup struct {
+	IdolName  string
+	GroupName string
+}
+
 type IndexData struct {
-	Image          string
+	ImageURL       string
 	Idols          []repository.Idol
 	NumberOfImages int64
 }
 
-func NewIndexData(image string, idols []repository.Idol, n int64) IndexData {
+func NewIndexData(image string, idols []IdolWithGroup, n int64) IndexData {
 	return IndexData{
-		Image:          image,
+		ImageURL:       image,
 		Idols:          idols,
 		NumberOfImages: n,
 	}
@@ -87,7 +92,6 @@ func Idol(c echo.Context) error {
 	return c.Render(http.StatusOK, "result", idols)
 }
 
-// This can be better, not loading the .env file every time
 func isAdmin(c *echo.Context) error {
 	auth := (*c).Request().Header.Get("Authorization")
 	if auth != os.Getenv("SECRET") {

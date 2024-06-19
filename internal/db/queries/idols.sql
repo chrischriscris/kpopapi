@@ -35,6 +35,11 @@ INSERT INTO group_members (
 RETURNING *;
 
 -- name: GetIdolsByNameLike :many
-SELECT * FROM idols
-WHERE stage_name ILIKE '%' || $1 || '%'
-OR name ILIKE '%' || $1 || '%';
+SELECT i.*, g.*
+FROM idols i
+LEFT JOIN group_members gm
+ON i.id = gm.idol_id
+LEFT JOIN groups g
+ON gm.group_id = g.id
+WHERE i.stage_name ILIKE '%' || $1 || '%'
+OR i.name ILIKE '%' || $1 || '%';
