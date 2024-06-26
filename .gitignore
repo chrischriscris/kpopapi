@@ -32,3 +32,5 @@ _images
 scrape-images-server
 scrape-images
 node_modules
+app
+scrape_images

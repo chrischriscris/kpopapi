@@ -10,6 +10,12 @@ IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
 LANDSCAPE_FOLDER = "landscape"
 PORTRAIT_FOLDER = "portrait"
 
+min_width_landscape = 1600
+min_height_landscape = 900
+
+min_width_portrait = 900
+min_height_portrait = 1600
+
 
 def get_leaf_nodes(directory) -> Generator[str, None, None]:
     for root, _, files in os.walk(directory):
@@ -19,7 +25,7 @@ def get_leaf_nodes(directory) -> Generator[str, None, None]:
 
 def is_landscape_image(image: Image) -> bool:
     width, height = image.size
-    return width / height >= 1
+    return width / height >= 1 and width >= min_width_landscape and height >= min_height_landscape
 
 
 def move_to_folder(file: str, folder: str):
@@ -53,7 +59,8 @@ def main():
             if is_landscape_image(image):
                 landscape_callback(file)
             else:
-                portrait_callback(file)
+                pass
+                # portrait_callback(file)
         except Exception:
             print(f"Could not open image {file}")
             continue
