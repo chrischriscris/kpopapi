@@ -5,12 +5,13 @@ import (
 	"io"
 	"os"
 
-	index "github.com/chrischriscris/kpopapi/internal/handlers"
+	"github.com/chrischriscris/kpopapi/internal/handlers/admin"
+	"github.com/chrischriscris/kpopapi/internal/handlers/index"
 	"github.com/chrischriscris/kpopapi/internal/scheduler"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
-    _ "github.com/joho/godotenv/autoload"
 )
 
 type Template struct {
@@ -56,6 +57,8 @@ func main() {
 	e.GET("/idols/random", index.Random)
 	e.GET("/idols", index.Idol)
     e.GET("/health", index.Health)
+
+    e.GET("/admin", admin.Index)
 
 	e.POST("/fetch-new-images", index.FetchNewImages)
 
