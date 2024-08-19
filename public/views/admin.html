@@ -68,18 +68,41 @@
 
     <!-- Main content -->
     <main class="bg-teal-50">
-        <div class="flex h-screen items-center justify-center">
+        <div class="flex h-screen flex-col items-center justify-center gap-y-8">
+            <h1 class="font-[Playfair Display] text-4xl font-bold">
+                Add to database
+            </h1>
+
             <form action="/admin" method="POST" class="flex flex-col space-y-4 rounded-lg bg-white p-4 shadow-lg">
-                <label for="name" class="font-[Roboto] font-bold">Name</label>
-                <input type="text" name="name" id="name" class="rounded-md border border-gray-300 p-2" required />
+                <label for="type" class="font-[Roboto] font-bold">Type</label>
+                <div class="space -x-4 flex flex-col">
+                    <label for="group" class="flex items-center space-x-2" onclick="handleTypeChange('group')">
+                        <input type="radio" name="type" id="group" value="group" required />
+                        <span>Group</span>
+                    </label>
+                    <label for="solo" class="flex items-center space-x-2" onclick="handleTypeChange('solo')">
+                        <input type="radio" name="type" id="solo" value="solo" required />
+                        <span>Solo</span>
+                    </label>
+                </div>
 
-                <label for="group" class="font-[Roboto] font-bold">Group</label>
-                <input type="text" name="group" id="group" class="rounded-md border border-gray-300 p-2" required />
+                <div id="name-field">
+                    <label for="name" class="font-[Roboto] font-bold">Name</label>
+                    <input type="text" name="name" id="name" class="rounded-md border border-gray-300 p-2" required />
+                </div>
 
-                <label for="debut" class="font-[Roboto] font-bold">Debut</label>
-                <input type="date" name="debut" id="debut" class="rounded-md border border-gray-300 p-2" required />
+                <div id="group-field">
+                    <label for="group" class="font-[Roboto] font-bold">Group (optional)</label>
+                    <input type="text" name="group" id="group" class="rounded-md border border-gray-300 p-2" />
+                </div>
+
+                <div id="debut-field">
+                    <label for="debut" class="font-[Roboto] font-bold">Debut</label>
+                    <input type="date" name="debut" id="debut" class="rounded-md border border-gray-300 p-2" />
+                </div>
+
                 <button type="submit" class="rounded-md bg-black p-2 font-[Roboto] font-bold text-white">
-                    Submit
+                    + Add
                 </button>
             </form>
         </div>
