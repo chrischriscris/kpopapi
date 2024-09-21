@@ -59,6 +59,7 @@ func main() {
     e.GET("/health", index.Health)
 
     e.GET("/admin", admin.Index)
+    e.POST("/admin", admin.AddToDB)
 
 	e.POST("/fetch-new-images", index.FetchNewImages)
 

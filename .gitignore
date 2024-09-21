@@ -34,3 +34,4 @@ scrape-images
 node_modules
 app
 scrape_images
+public/static/output.css
