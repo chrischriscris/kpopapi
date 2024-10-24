@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 
+import os
 import shutil
 import sys
-import os
+from enum import Enum
 from typing import Generator
+
 from PIL import Image
+
+
+class ImageKind(Enum):
+    PORTRAIT = 1
+    LANDSCAPE = 2
+    NOT_ENOUGH_RES = 3
+
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
 LANDSCAPE_FOLDER = "landscape"
@@ -23,9 +32,30 @@ def get_leaf_nodes(directory) -> Generator[str, None, None]:
             yield os.path.join(root, file)
 
 
-def is_landscape_image(image: Image) -> bool:
+def classify_image(image: Image) -> ImageKind:
     width, height = image.size
-    return width / height >= 1 and width >= min_width_landscape and height >= min_height_landscape
+
+    if width / height >= 1:
+        return (
+            ImageKind.LANDSCAPE
+            if width >= min_width_landscape and height >= min_height_landscape
+            else ImageKind.NOT_ENOUGH_RES
+        )
+
+    return (
+        ImageKind.PORTRAIT
+        if width >= min_width_portrait and height >= min_height_portrait
+        else ImageKind.NOT_ENOUGH_RES
+    )
+
+
+def is_portrait_image(image: Image) -> bool:
+    width, height = image.size
+    return (
+        height / width >= 1
+        and width >= min_width_portrait
+        and height >= min_height_portrait
+    )
 
 
 def move_to_folder(file: str, folder: str):
@@ -56,11 +86,15 @@ def main():
 
         try:
             image = Image.open(file)
-            if is_landscape_image(image):
-                landscape_callback(file)
-            else:
-                pass
-                # portrait_callback(file)
+            kind = classify_image(image)
+            match kind:
+                case ImageKind.LANDSCAPE:
+                    landscape_callback(file)
+                case ImageKind.PORTRAIT:
+                    portrait_callback(file)
+                case _:
+                    pass
+
         except Exception:
             print(f"Could not open image {file}")
             continue
