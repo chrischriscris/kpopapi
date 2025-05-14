@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	dbutils "github.com/chrischriscris/kpopapi/internal/db"
@@ -120,6 +121,8 @@ func getPageLinks() map[string][]string {
 	links := make(map[string][]string)
 	c.OnHTML("div.cell", func(e *colly.HTMLElement) {
 		artist := scraperutils.ExtractLabel(e.DOM.Find("figcaption").First().Text())
+		artist = strings.Split(artist, ">")[1][1:]
+
 		link := e.ChildAttr("a[aria-label='picture']", "href")
 
 		links[artist] = append(links[artist], link)
